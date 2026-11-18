@@ -78,14 +78,40 @@ Mobile is the base.
 - Header: wordmark on the left, theme toggle on the right. Nothing else.
 - Trail: intro, real mastery (a meter plus the percentage computed from progress), review rows if any are due, then the task list. Future levels are text, with the unlock rule written out. They are not links.
 - Task: scenario, then the terminal, then the actions. The command field and Executar stay reachable at the bottom of the viewport. Dica, Reiniciar, and Verificar sit in a wrapping row of targets at least 44px tall.
-- Around 800px the trail measure caps near 42rem and stays one column. The task terminal grows; the lesson does not become a sidebar yet.
-- Around 1100px the task screen splits: lesson column about 22rem, terminal taking the rest of the width. The trail does not split. A trail is a list.
+- Around 800px the trail measure caps near 42rem and stays one column. The task terminal grows; the lesson does not become a sidebar yet. The graph stays above the terminal.
+- Around 1100px the task screen splits: lesson column about 22rem, then the graph and the terminal side by side. The graph column is about 18 to 22rem. The terminal takes the rest. The trail does not split. A trail is a list.
 
 Whitespace comes from the spacing scale 4, 8, 12, 16, 24, 40. The lesson block uses 16. The gap before the terminal uses 24. Do not pad sections with desktop-sized empty bands on a phone.
 
 ## Motif
 
-A 3px accent bar on the left edge of the active trail row and on the left edge of the terminal. Same bar, two places. It is the cursor, moved outside the prompt.
+A 3px accent bar on the left edge of the active trail row and on the left edge of the terminal. Same bar, two places. It is the cursor, moved outside the prompt. The graph does not get a third bar. HEAD is the filled accent node, and the row also says HEAD.
+
+## Graph
+
+The task screen draws the commits in the session. Before `git init` the line is "Repositório ainda não iniciado." After init, and before the first commit, the branch name and "Nenhum commit ainda." After that, one row per commit: short hash, the first line of the message, the branch names on that commit, and the word HEAD on the commit that is checked out.
+
+Lines are ink. A second branch stays in the next column, named, in ink. A merge is a commit with more than one parent: the line joins the first parent's column. The current branch prefers the first column, because that is the line the person is on. HEAD is detached when it is not the tip of the current branch: the caption says "HEAD fora da branch", and the branch name stays on its own tip. An open merge or revert is a sentence under the caption. A conflict names the files. It uses the danger color and the word "Conflito".
+
+On a phone the graph sits between the lesson and the terminal and scrolls inside itself after a few rows, so the command field stays put. The reader uses the public repository state. If a later engine adds a `branches` map or a `detached` flag on that state, the same drawing picks them up.
+
+## Terminal dock
+
+The keys `git`, `add`, `commit -m`, and `"` sit above the command field. They insert at the caret. `commit -m` leaves the caret between the quotes. Tab, and the Tab key, finish a command when the buffer is a prefix of one the level already uses. Anterior and Seguinte walk the commands of this task. On a desktop keyboard, arrow up and arrow down do the same walk.
+
+The task screen is fixed to the visual viewport. When the on-screen keyboard opens, the graph steps aside and the field stays at the bottom of what is still visible. The keys do not appear and disappear while typing, so the field does not jump.
+
+On a phone the scenario is shown in full. If the panel would cut it, the text folds to two lines and a button says "Mostrar o enunciado inteiro". The token keys stay on one row and scroll sideways, so the command output keeps the height. The help sentence stays in the page for the field's description and is visible from 1100px up, where the terminal has the room.
+
+## First visit
+
+One screen, then the trail. It says what to type, what Verificar looks at, and where the progress lives. "Como funciona" on the trail opens it again. It is not a tour with three illustrated steps.
+
+The trail lists mastery for the level and, under it, mastery for each command. A locked level says "Fechado." and the unlock rule, and it is not a link. A level whose tasks are not in this release says "Aberto." once the previous level has cleared 80%, and it is still not a link. Due reviews sit above the task list.
+
+## Install and network
+
+When the browser fires `beforeinstallprompt`, the trail shows "Instalar neste aparelho" and "Agora não". "Agora não" is remembered on this browser. On iPhone, where that event does not exist, the trail says to use Compartilhar and Adicionar à Tela de Início, with "Entendi" to dismiss it. Offline, a status line says practice continues with what this browser already opened. Neither line lives in the header. The header stays the wordmark and the theme toggle.
 
 ## Shape and elevation
 

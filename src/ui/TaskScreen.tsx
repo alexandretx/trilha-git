@@ -4,6 +4,9 @@ import type { TaskOutcome } from '../core/progress';
 import { scoreAttempt } from '../core/progress';
 import { taskById } from '../content/git/pack';
 import type { RepoState } from '../engines/git';
+import { CommitGraph } from './CommitGraph';
+import { Scenario } from './Scenario';
+import { OfflineNote } from './status';
 import { Terminal, type TerminalLine } from './Terminal';
 
 interface TaskScreenProps {
@@ -12,6 +15,8 @@ interface TaskScreenProps {
 }
 
 const intro: TerminalLine = { kind: 'info', text: 'Repositório em /repo. Digite um comando.' };
+const hintTiers = ['Conceito', 'Sintaxe', 'Resposta'] as const;
+const hintButtons = ['Dica: conceito', 'Dica: sintaxe', 'Dica: resposta'] as const;
 
 export function TaskScreen({ taskId, onAttempt }: TaskScreenProps) {
   const task = taskById(taskId);
@@ -29,7 +34,7 @@ export function TaskScreen({ taskId, onAttempt }: TaskScreenProps) {
     );
   }
 
-  return <TaskPlay task={task} onAttempt={onAttempt} />;
+  return <TaskPlay key={task.id} task={task} onAttempt={onAttempt} />;
 }
 
 function TaskPlay({
@@ -39,8 +44,9 @@ function TaskPlay({
   task: NonNullable<ReturnType<typeof taskById>>;
   onAttempt: (outcome: Omit<TaskOutcome, 'score'>) => void;
 }) {
-  const sessionRef = useRef<ReturnType<typeof engine.createSession> | null>(null);
+  const [session, setSession] = useState(() => engine.createSession(task.initialState));
   const feedbackRef = useRef<HTMLDivElement>(null);
+  const [repo, setRepo] = useState<RepoState>(() => session.getState());
   const [lines, setLines] = useState<TerminalLine[]>([intro]);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [failures, setFailures] = useState(0);
@@ -48,16 +54,17 @@ function TaskPlay({
   const [passed, setPassed] = useState(false);
 
   useEffect(() => {
-    sessionRef.current = engine.createSession(task.initialState);
-    setLines([intro]);
-    setHintsUsed(0);
-    setFailures(0);
-    setFeedback(null);
-    setPassed(false);
-  }, [task]);
+    const previous = document.title;
+    document.title = `${task.title} · Trilha Git`;
+    return () => {
+      document.title = previous;
+    };
+  }, [task.title]);
 
   function restart() {
-    sessionRef.current = engine.createSession(task.initialState);
+    const next = engine.createSession(task.initialState);
+    setSession(next);
+    setRepo(next.getState());
     setLines([intro]);
     setFailures(0);
     setFeedback(null);
@@ -65,9 +72,8 @@ function TaskPlay({
   }
 
   function execute(command: string) {
-    const session = sessionRef.current;
-    if (!session) return;
     const result = session.execute(command);
+    setRepo(session.getState());
     const next: TerminalLine[] = [{ kind: 'cmd', text: command }];
     if (result.stdout) next.push({ kind: 'out', text: result.stdout.replace(/\n$/, '') });
     if (result.stderr) next.push({ kind: 'err', text: result.stderr.replace(/\n$/, '') });
@@ -75,9 +81,8 @@ function TaskPlay({
   }
 
   function verify() {
-    const session = sessionRef.current;
-    if (!session || passed) return;
-    const result = grader.grade(session.getState() as RepoState, task.checks, session.history());
+    if (passed) return;
+    const result = grader.grade(session.getState(), task.checks, session.history());
     const attempts = failures + 1;
     setFeedback(result);
     if (!result.passed) {
@@ -107,7 +112,7 @@ function TaskPlay({
 
   useEffect(() => {
     if (!feedback) return;
-    feedbackRef.current?.scrollIntoView({ block: 'nearest' });
+    feedbackRef.current?.focus();
   }, [feedback]);
 
   const shownHints = task.hints.slice(0, hintsUsed);
@@ -117,18 +122,19 @@ function TaskPlay({
 
   return (
     <div className="screen task">
+      <OfflineNote />
       <div className="task-side">
         <section className="lesson">
           <p className="back">
             <a href="#/">Voltar à trilha</a>
           </p>
           <h1>{task.title}</h1>
-          <p className="scenario">{task.scenario}</p>
+          <Scenario text={task.scenario} />
           {shownHints.length > 0 ? (
             <div className="hints">
               {shownHints.map((hint, index) => (
                 <p key={`${index}-${hint}`}>
-                  <strong>Dica {index + 1}.</strong> {hint}
+                  <strong>{hintTiers[index]}.</strong> {hint}
                 </p>
               ))}
             </div>
@@ -136,6 +142,7 @@ function TaskPlay({
           {feedback ? (
             <div
               ref={feedbackRef}
+              tabIndex={-1}
               className={feedback.passed ? 'feedback ok' : 'feedback fail'}
               role="status"
             >
@@ -167,7 +174,7 @@ function TaskPlay({
             onClick={() => setHintsUsed((count) => Math.min(3, count + 1))}
             disabled={hintsUsed >= 3}
           >
-            {hintsUsed >= 3 ? 'Dicas encerradas' : `Dica ${hintsUsed + 1} de 3`}
+            {hintButtons[hintsUsed] ?? 'Dicas encerradas'}
           </button>
           <button className="btn" type="button" onClick={restart}>
             Reiniciar repositório
@@ -177,7 +184,8 @@ function TaskPlay({
           </button>
         </div>
       </div>
-      <div className="terminal-column">
+      <div className="workbench">
+        <CommitGraph state={repo} />
         <Terminal lines={lines} onSubmit={execute} />
       </div>
     </div>

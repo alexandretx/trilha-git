@@ -13,6 +13,8 @@
   --danger: #8c2f2f;
   --font: 'IBM Plex Sans', 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --vv-height: 100dvh;
+  --vv-offset: 0px;
 }
 
 :root[data-theme='dark'] {
@@ -49,13 +51,31 @@ body {
   line-height: 1.5;
 }
 
+a[href],
 button,
-a,
-label {
+summary,
+select,
+label[for],
+label:has(> input[type='checkbox'], > input[type='radio']),
+[role='button'],
+[role='link'],
+[role='tab'],
+[role='menuitem'],
+[role='option'],
+[role='switch'],
+input[type='checkbox'],
+input[type='radio'],
+input[type='file'],
+input[type='submit'],
+input[type='button'],
+input[type='reset'],
+input[type='range'],
+input[type='color'] {
   cursor: pointer;
 }
 
-button:disabled {
+button:disabled,
+[aria-disabled='true'] {
   cursor: not-allowed;
 }
 
@@ -64,29 +84,67 @@ button:disabled {
   outline-offset: 2px;
 }
 
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 2;
+  transform: translateY(-150%);
+  padding: 8px 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.skip-link:link,
+.skip-link:visited,
+.skip-link:hover {
+  color: var(--accent-ink);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
 .shell {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: var(--paper);
 }
 
 .shell.is-task {
-  height: 100dvh;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--vv-offset, 0px);
+  width: 100%;
+  height: var(--vv-height, 100dvh);
+  min-height: 0;
+  overflow: hidden;
+}
+
+html:has(.shell.is-task),
+html:has(.shell.is-task) body {
+  height: 100%;
+  overflow: hidden;
 }
 
 .top {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
   border-bottom: 1px solid var(--line);
 }
 
 .wordmark {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 15px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 a:link,
@@ -113,8 +171,18 @@ a:hover {
 main {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+main:focus {
+  outline: none;
+}
+
+main:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .screen {
@@ -124,13 +192,15 @@ main {
 }
 
 .screen.task {
-  width: min(100%, 72rem);
+  width: min(100%, 80rem);
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-bottom: 12px;
+  gap: 12px;
+  padding-top: 16px;
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 h1 {
@@ -162,12 +232,24 @@ p {
 .mastery-note,
 .save-note,
 .task-meta,
-.back {
+.back,
+.command-help,
+.graph-summary,
+.graph-pending,
+.lock-state {
   color: var(--soft);
+}
+
+.lock-state {
+  font-weight: 600;
 }
 
 .save-note {
   margin-top: 24px;
+}
+
+.screen > .btn {
+  margin-bottom: 16px;
 }
 
 progress {
@@ -192,6 +274,36 @@ progress::-moz-progress-bar {
   background: var(--accent);
 }
 
+.concepts {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.concepts li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.concepts progress {
+  grid-column: 1 / -1;
+}
+
+.concept-name,
+.concept-percent {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.concept-percent {
+  color: var(--soft);
+}
+
 .task-list {
   list-style: none;
   margin: 0;
@@ -204,7 +316,7 @@ progress::-moz-progress-bar {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
-  align-items: baseline;
+  align-items: center;
   padding: 12px 12px 12px 16px;
   border-bottom: 1px solid var(--line);
   color: inherit;
@@ -223,6 +335,7 @@ progress::-moz-progress-bar {
 }
 
 .task-row.is-done::before,
+.task-row.is-next::before,
 .task-row:hover::before,
 .task-row:focus-visible::before {
   background: var(--accent);
@@ -249,27 +362,63 @@ progress::-moz-progress-bar {
   font-size: 13px;
 }
 
-.level-block.locked p,
-.notice {
-  color: var(--soft);
+.notice,
+.install-offer {
+  padding: 12px;
+  background: var(--raised);
 }
 
 .notice {
-  padding: 12px;
-  background: var(--raised);
+  margin-bottom: 12px;
+}
+
+.install-offer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 16px;
+}
+
+.install-offer p {
+  margin: 0;
+  flex: 1 1 16rem;
+}
+
+.install-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .task-side {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   min-height: 0;
+  overflow: visible;
   background: var(--raised);
 }
 
 .lesson {
+  flex: 0 0 auto;
   padding: 16px 16px 0;
   min-height: 0;
+  overflow: visible;
   background: var(--raised);
+}
+
+.scenario.is-folded {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.scenario-toggle {
+  margin: 0 0 4px;
 }
 
 .actions {
@@ -284,7 +433,8 @@ progress::-moz-progress-bar {
 .scenario,
 .hints p,
 .feedback p,
-.feedback li {
+.feedback li,
+.install-offer p {
   overflow-wrap: anywhere;
 }
 
@@ -293,7 +443,18 @@ progress::-moz-progress-bar {
   margin-top: 12px;
 }
 
-.feedback.fail {
+.feedback {
+  outline: none;
+}
+
+.feedback:focus,
+.feedback:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.feedback.fail,
+.term-err {
   color: var(--danger);
 }
 
@@ -304,6 +465,7 @@ progress::-moz-progress-bar {
 
 .btn {
   min-height: 44px;
+  min-width: 44px;
   padding: 8px 14px;
   border-radius: 2px;
   border: 1px solid var(--control);
@@ -321,7 +483,7 @@ progress::-moz-progress-bar {
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .btn.primary {
@@ -333,43 +495,163 @@ progress::-moz-progress-bar {
 .btn.primary:hover:not(:disabled) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+  color: var(--accent-ink);
 }
 
 .theme-toggle {
   flex: 0 1 auto;
 }
 
-.terminal-column {
+.workbench {
   flex: 1;
-  min-height: 16rem;
+  min-height: 0;
+  min-width: 0;
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.commit-graph {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+  min-width: 0;
+  max-height: 11rem;
+  background: var(--paper);
+  border: 1px solid var(--control);
+}
+
+.commit-graph h2 {
+  margin: 0;
+  padding: 12px 12px 0;
+  font-size: 1rem;
+}
+
+.graph-summary,
+.graph-pending,
+.graph-conflict {
+  margin: 0;
+  padding: 4px 12px 8px;
+  font-size: 14px;
+}
+
+.graph-conflict {
+  color: var(--danger);
+}
+
+.graph-scroll {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.graph-sheet {
+  position: relative;
+  width: 100%;
+}
+
+.graph-rails {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+}
+
+.graph-rails path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.graph-rails circle {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.graph-rails circle.is-head {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.graph-rails circle.is-unborn {
+  fill: var(--paper);
+  stroke: var(--accent);
+}
+
+.graph-rows {
+  list-style: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.graph-rows > li,
+.graph-row {
+  width: 100%;
+}
+
+.graph-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-right: 12px;
+}
+
+.graph-hash,
+.graph-message,
+.graph-ref {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.graph-hash,
+.graph-ref {
+  flex: 0 0 auto;
+}
+
+.graph-hash {
+  color: var(--soft);
+}
+
+.graph-message {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-ref.is-current {
+  color: var(--accent);
 }
 
 .terminal {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 16rem;
+  min-height: 0;
+  min-width: 0;
   background: var(--terminal);
   border: 1px solid var(--control);
   border-left: 3px solid var(--accent);
 }
 
 .terminal-log {
-  flex: 1;
+  flex: 1 1 auto;
   margin: 0;
   padding: 12px;
   overflow: auto;
-  min-height: 8rem;
+  min-height: 5.5rem;
   font-family: var(--mono);
   font-size: 16px;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.term-err {
-  color: var(--danger);
 }
 
 .term-info {
@@ -380,21 +662,43 @@ progress::-moz-progress-bar {
   color: var(--accent);
 }
 
-.command-form {
+.command-help {
+  margin: 0;
+  padding: 8px 12px 0;
+  font-size: 14px;
+}
+
+.keys {
   display: flex;
   flex-wrap: wrap;
+  flex-shrink: 0;
   gap: 8px;
-  align-items: center;
+  padding: 8px 8px 0;
+}
+
+.btn.key {
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 8px 10px;
+}
+
+.command-form {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
   padding: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
 }
 
 .command-form label {
+  grid-column: 1 / -1;
   font-size: 14px;
 }
 
 .command-form input {
-  flex: 1 1 12rem;
   min-width: 0;
   min-height: 44px;
   padding: 0 12px;
@@ -404,6 +708,79 @@ progress::-moz-progress-bar {
   color: var(--ink);
   font-family: var(--mono);
   font-size: 16px;
+  scroll-margin-bottom: 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html[data-keyboard='open'] .commit-graph {
+  display: none;
+}
+
+html[data-keyboard='open'] .command-help {
+  display: none;
+}
+
+@media (max-width: 1099px) {
+  .screen.task {
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  .commit-graph h2 {
+    padding: 6px 12px 0;
+  }
+
+  .graph-summary,
+  .graph-pending {
+    padding: 0 12px 4px;
+  }
+
+  .workbench {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 799px) {
+  .command-help {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .actions {
+    margin-top: 8px;
+  }
+
+  .keys {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .btn.key {
+    flex: 0 0 auto;
+  }
+}
+
+html[data-keyboard='open'] .screen.task {
+  gap: 8px;
+  padding-top: 8px;
 }
 
 @media (min-width: 800px) {
@@ -412,57 +789,79 @@ progress::-moz-progress-bar {
   }
 }
 
-@media (max-width: 1099px) {
-  .shell.is-task {
-    height: 100dvh;
-  }
-
-  .screen.task {
-    overflow: hidden;
-  }
-
-  .task-side {
-    max-height: 46dvh;
-  }
-
-  .lesson {
-    overflow: auto;
-  }
-}
-
 @media (min-width: 1100px) {
-  .shell.is-task {
-    height: 100dvh;
-  }
-
   .screen.task {
     display: grid;
     grid-template-columns: 22rem minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
     align-items: stretch;
-    gap: 24px;
-    overflow: hidden;
+    column-gap: 24px;
+    row-gap: 12px;
     padding-top: 24px;
   }
 
+  .screen.task > .notice {
+    grid-column: 1 / -1;
+  }
+
   .task-side {
+    grid-column: 1;
+    grid-row: 2;
+    max-height: none;
     min-height: 0;
+    overflow: hidden;
   }
 
   .lesson {
+    flex: 1 1 auto;
     overflow: auto;
   }
 
-  .terminal-column {
-    min-height: 0;
+  .workbench {
+    grid-column: 2;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .commit-graph {
+    max-height: none;
+    height: 100%;
+    flex: 1 1 auto;
+  }
+
+  .graph-scroll {
+    flex: 1;
   }
 
   .terminal {
     min-height: 0;
+  }
+
+  .terminal-log {
+    min-height: 0;
+  }
+
+  .command-help {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 8px 12px 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled) {
     transform: none;
+  }
+
+  .skip-link {
+    transition: none;
   }
 }

@@ -36,7 +36,7 @@ describe('nível básico', () => {
     );
     expect(level1Tasks.every((task) => task.hints.length === 3)).toBe(true);
     expect(gitPack.engineId).toBe('git');
-    expect(gitPack.levels.map((level) => level.tasks.length)).toEqual([8, 0, 0, 0, 0]);
+    expect(gitPack.levels.map((level) => level.tasks.length)).toEqual([8, 9, 10, 0, 0]);
   });
 
   it.each(level1Tasks.map((task) => [task.id]))('%s passes with a valid sequence', (id) => {

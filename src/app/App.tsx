@@ -1,4 +1,13 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   emptyProgress,
   recordOutcome,
@@ -8,7 +17,9 @@ import {
 import { browserProgressStore } from '../core/progress-store';
 import { Onboarding } from '../ui/Onboarding';
 import { introSeen, rememberIntro } from '../ui/intro';
-import { TaskScreen } from '../ui/TaskScreen';
+const TaskScreen = lazy(() =>
+  import('../ui/TaskScreen').then((module) => ({ default: module.TaskScreen })),
+);
 import { TrailScreen } from '../ui/TrailScreen';
 import { useTheme } from '../ui/theme';
 import { useViewportHeight } from '../ui/viewport';
@@ -88,7 +99,19 @@ export function App() {
       </div>
     );
   } else if (route.name === 'task') {
-    body = <TaskScreen taskId={route.taskId} onAttempt={onAttempt} />;
+    body = (
+      <TaskBoundary resetKey={route.taskId}>
+        <Suspense
+          fallback={
+            <div className="screen">
+              <p role="status">Carregando a tarefa.</p>
+            </div>
+          }
+        >
+          <TaskScreen taskId={route.taskId} onAttempt={onAttempt} />
+        </Suspense>
+      </TaskBoundary>
+    );
   } else if (showIntro) {
     body = <Onboarding onDone={closeIntro} />;
   } else {
@@ -124,4 +147,34 @@ export function App() {
       </main>
     </div>
   );
+}
+
+class TaskBoundary extends Component<
+  { resetKey: string; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  componentDidUpdate(previous: { resetKey: string }) {
+    if (previous.resetKey !== this.props.resetKey && this.state.failed) {
+      this.setState({ failed: false });
+    }
+  }
+
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="screen">
+        <h1>Tarefa indisponível</h1>
+        <p>Não consegui carregar esta tarefa neste navegador.</p>
+        <p>
+          <a href="#/">Voltar à trilha</a>
+        </p>
+      </div>
+    );
+  }
 }

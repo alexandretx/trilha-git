@@ -18,6 +18,22 @@ const intro: TerminalLine = { kind: 'info', text: 'Repositório em /repo. Digite
 const hintTiers = ['Conceito', 'Sintaxe', 'Resposta'] as const;
 const hintButtons = ['Dica: conceito', 'Dica: sintaxe', 'Dica: resposta'] as const;
 
+function revealInScroller(scroller: HTMLElement, target: HTMLElement) {
+  const scrollerRect = scroller.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  const head = scroller.querySelector('.lesson-head');
+  const headHeight =
+    head instanceof HTMLElement && getComputedStyle(head).position === 'sticky'
+      ? head.getBoundingClientRect().height
+      : 0;
+  const padding = 8;
+  const topLimit = scrollerRect.top + headHeight + padding;
+  const bottomLimit = scrollerRect.bottom - padding;
+  if (bottomLimit - topLimit <= 0) return;
+  if (targetRect.top >= topLimit && targetRect.bottom <= bottomLimit) return;
+  scroller.scrollTop += targetRect.top - topLimit;
+}
+
 export function TaskScreen({ taskId, onAttempt }: TaskScreenProps) {
   const task = taskById(taskId);
   if (!task) {
@@ -46,6 +62,7 @@ function TaskPlay({
 }) {
   const [session, setSession] = useState(() => engine.createSession(task.initialState));
   const feedbackRef = useRef<HTMLDivElement>(null);
+  const lessonRef = useRef<HTMLElement>(null);
   const [repo, setRepo] = useState<RepoState>(() => session.getState());
   const [lines, setLines] = useState<TerminalLine[]>([intro]);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -112,8 +129,19 @@ function TaskPlay({
 
   useEffect(() => {
     if (!feedback) return;
-    feedbackRef.current?.focus();
+    const node = feedbackRef.current;
+    const lesson = lessonRef.current;
+    if (node && lesson) revealInScroller(lesson, node);
+    node?.focus({ preventScroll: true });
   }, [feedback]);
+
+  useEffect(() => {
+    if (hintsUsed === 0) return;
+    const lesson = lessonRef.current;
+    const hint = lesson?.querySelector<HTMLElement>(`[data-hint="${hintsUsed - 1}"]`);
+    if (!lesson || !hint) return;
+    revealInScroller(lesson, hint);
+  }, [hintsUsed]);
 
   const shownHints = task.hints.slice(0, hintsUsed);
   const attemptScore = feedback?.passed
@@ -124,21 +152,21 @@ function TaskPlay({
     <div className="screen task">
       <OfflineNote />
       <div className="task-side">
-        <section className="lesson">
-          <p className="back">
-            <a href="#/">Voltar à trilha</a>
-          </p>
-          <h1>{task.title}</h1>
+        <section ref={lessonRef} className="lesson" tabIndex={0} aria-label="Enunciado e dicas">
+          <div className="lesson-head">
+            <p className="back">
+              <a href="#/">Voltar à trilha</a>
+            </p>
+            <h1>{task.title}</h1>
+          </div>
           <Scenario text={task.scenario} />
-          {shownHints.length > 0 ? (
-            <div className="hints">
-              {shownHints.map((hint, index) => (
-                <p key={`${index}-${hint}`}>
-                  <strong>{hintTiers[index]}.</strong> {hint}
-                </p>
-              ))}
-            </div>
-          ) : null}
+          <div className="hints" aria-live="polite">
+            {shownHints.map((hint, index) => (
+              <p key={`${index}-${hint}`} data-hint={index}>
+                <strong>{hintTiers[index]}.</strong> {hint}
+              </p>
+            ))}
+          </div>
           {feedback ? (
             <div
               ref={feedbackRef}

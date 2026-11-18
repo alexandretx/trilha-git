@@ -1,12 +1,25 @@
+import { readFileSync } from 'node:fs';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
 
+function previewSecurityHeaders(): Record<string, string> {
+  const file = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8')) as {
+    headers?: { source: string; headers: { key: string; value: string }[] }[];
+  };
+  const rule = file.headers?.find((item) => item.source === '/(.*)');
+  return Object.fromEntries((rule?.headers ?? []).map((header) => [header.key, header.value]));
+}
+
 export default defineConfig({
+  preview: {
+    headers: previewSecurityHeaders(),
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'script',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'Trilha Git',
@@ -39,6 +52,8 @@ export default defineConfig({
       workbox: {
         navigateFallback: '/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        clientsClaim: true,
+        skipWaiting: true,
       },
     }),
   ],

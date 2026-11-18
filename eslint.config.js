@@ -6,9 +6,17 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'dev-dist', 'coverage'] },
+  { ignores: ['dist', 'dev-dist', 'coverage', 'playwright-report', 'test-results', 'blob-report'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    files: ['public/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: globals.browser,
+    },
+  },
   {
     files: ['scripts/**/*.mjs'],
     languageOptions: {

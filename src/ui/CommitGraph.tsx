@@ -1,5 +1,11 @@
 import type { RepoState } from '../engines/git';
-import { layoutGraph, toGraphInput, type GraphNodeView, type GraphView } from './graph';
+import {
+  conflictText,
+  layoutGraph,
+  toGraphInput,
+  type GraphNodeView,
+  type GraphView,
+} from './graph';
 
 interface CommitGraphProps {
   state: RepoState;
@@ -11,6 +17,11 @@ export function CommitGraph({ state }: CommitGraphProps) {
     <section className="commit-graph" aria-labelledby="graph-heading">
       <h2 id="graph-heading">Repositório</h2>
       <p className="graph-summary">{view.summary}</p>
+      {view.conflict ? (
+        <p className="graph-conflict" role="status">
+          {conflictText(view.conflict)}
+        </p>
+      ) : null}
       {view.nodes.length > 0 ? <GraphSheet view={view} /> : null}
       {view.pendingBranches.length > 0 ? (
         <p className="graph-pending">Sem commit: {view.pendingBranches.join(', ')}.</p>

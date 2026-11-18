@@ -40,7 +40,7 @@ describe('TrailScreen', () => {
     expect(screen.queryByRole('heading', { name: 'Revisão' })).toBeNull();
   });
 
-  it('opens an empty level at 80% and keeps the following level closed', () => {
+  it('opens Histórico after Básico and keeps Branches closed', () => {
     let progress = emptyProgress();
     for (const task of level1Tasks) {
       progress = recordOutcome(progress, {
@@ -56,8 +56,8 @@ describe('TrailScreen', () => {
     render(<TrailScreen progress={progress} loadError={null} onShowIntro={() => undefined} />);
     const historico = screen.getByRole('heading', { name: 'Histórico' }).closest('section');
     const branches = screen.getByRole('heading', { name: 'Branches' }).closest('section');
-    expect(historico?.textContent).toContain('Aberto.');
-    expect(historico?.querySelector('a')).toBeNull();
+    expect(historico?.querySelector('a')).toBeTruthy();
+    expect(historico?.textContent).not.toContain('Fechado.');
     expect(branches?.textContent).toContain('Fechado.');
     expect(screen.getByRole('progressbar', { name: 'Domínio de init, 100%' })).toBeTruthy();
   });

@@ -18,6 +18,13 @@ export interface GraphBranchInput {
   tip: string | null;
 }
 
+export interface GraphConflict {
+  kind: 'merge' | 'revert';
+  branch: string;
+  incomingName: string;
+  paths: readonly string[];
+}
+
 export interface GraphInput {
   initialized: boolean;
   head: string | null;
@@ -25,6 +32,7 @@ export interface GraphInput {
   headBranch: string | null;
   branches: readonly GraphBranchInput[];
   commits: readonly GraphCommitInput[];
+  conflict: GraphConflict | null;
 }
 
 export interface GraphRefView {
@@ -62,26 +70,29 @@ export interface GraphView {
   nodes: GraphNodeView[];
   edges: GraphEdgeView[];
   pendingBranches: string[];
+  conflict: GraphConflict | null;
 }
 
-type BranchedState = RepoState & {
-  branches?: Record<string, string | null>;
-  detached?: boolean;
-};
+export function conflictText(conflict: GraphConflict): string {
+  const lead =
+    conflict.kind === 'revert'
+      ? `Revert em andamento de ${conflict.incomingName}.`
+      : `Merge em andamento: ${conflict.incomingName} em ${conflict.branch}.`;
+  if (conflict.paths.length === 0) return lead;
+  return `${lead} Conflito em ${conflict.paths.join(', ')}.`;
+}
 
-// Phase 3 can add `branches` and `detached` on the snapshot. Today there is one branch.
-export function toGraphInput(state: BranchedState): GraphInput {
-  const detached = state.detached === true;
-  let branches: GraphBranchInput[] =
-    state.branches && typeof state.branches === 'object'
-      ? Object.entries(state.branches).map(([name, tip]) => ({
-          name,
-          tip: typeof tip === 'string' ? tip : null,
-        }))
-      : [{ name: state.branch, tip: state.head }];
-  if (!detached && state.branch && !branches.some((branch) => branch.name === state.branch)) {
-    branches = [{ name: state.branch, tip: state.head }, ...branches];
-  }
+// HEAD is detached when it is not the tip of the current branch. This engine has no detach command.
+export function toGraphInput(state: RepoState): GraphInput {
+  const tip = Object.prototype.hasOwnProperty.call(state.branches, state.branch)
+    ? state.branches[state.branch]
+    : undefined;
+  const detached = state.head !== null && tip !== state.head;
+  const branches = Object.entries(state.branches).map(([name, branchTip]) => ({
+    name,
+    tip: branchTip,
+  }));
+  const pending = state.merge;
   return {
     initialized: state.initialized,
     head: state.head,
@@ -93,6 +104,14 @@ export function toGraphInput(state: BranchedState): GraphInput {
       message: commit.message,
       timestamp: commit.timestamp,
     })),
+    conflict: pending
+      ? {
+          kind: pending.kind,
+          branch: pending.branch,
+          incomingName: pending.incomingName,
+          paths: pending.unmerged.map((mark) => mark.path),
+        }
+      : null,
   };
 }
 
@@ -118,6 +137,7 @@ export function layoutGraph(input: GraphInput): GraphView {
       nodes: [node],
       edges: [],
       pendingBranches: pendingBranches.filter((branch) => branch !== name),
+      conflict: input.conflict,
     };
   }
 
@@ -171,6 +191,7 @@ export function layoutGraph(input: GraphInput): GraphView {
     nodes,
     edges,
     pendingBranches,
+    conflict: input.conflict,
   };
 }
 
@@ -184,6 +205,7 @@ function blank(kind: GraphView['kind'], summary: string): GraphView {
     nodes: [],
     edges: [],
     pendingBranches: [],
+    conflict: null,
   };
 }
 

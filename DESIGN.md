@@ -91,7 +91,7 @@ A 3px accent bar on the left edge of the active trail row and on the left edge o
 
 The task screen draws the commits in the session. Before `git init` the line is "Repositório ainda não iniciado." After init, and before the first commit, the branch name and "Nenhum commit ainda." After that, one row per commit: short hash, the first line of the message, the branch names on that commit, and the word HEAD on the commit that is checked out.
 
-Lines are ink. A second branch stays in the next column, named, in ink. A merge is a commit with more than one parent: the line joins the first parent's column. The current branch prefers the first column, because that is the line the person is on.
+Lines are ink. A second branch stays in the next column, named, in ink. A merge is a commit with more than one parent: the line joins the first parent's column. The current branch prefers the first column, because that is the line the person is on. HEAD is detached when it is not the tip of the current branch: the caption says "HEAD fora da branch", and the branch name stays on its own tip. An open merge or revert is a sentence under the caption. A conflict names the files. It uses the danger color and the word "Conflito".
 
 On a phone the graph sits between the lesson and the terminal and scrolls inside itself after a few rows, so the command field stays put. The reader uses the public repository state. If a later engine adds a `branches` map or a `detached` flag on that state, the same drawing picks them up.
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { level3Tasks } from '../content/git/level3';
 import { GitSession } from '../engines/git';
-import { layoutGraph, toGraphInput, type GraphInput } from './graph';
+import { conflictText, layoutGraph, toGraphInput, type GraphInput } from './graph';
 
 const clock = { now: () => Date.UTC(2026, 10, 18, 15, 0, 0) };
 
@@ -60,6 +61,7 @@ describe('commit graph', () => {
         { oid: 'B', parents: ['A'], message: 'segue main', timestamp: 2 },
         { oid: 'C', parents: ['A'], message: 'abre feature', timestamp: 4 },
       ],
+      conflict: null,
     };
     const view = layoutGraph(input);
     expect(columnOf(input, 'B')).toBe(0);
@@ -91,6 +93,7 @@ describe('commit graph', () => {
         { oid: 'C', parents: ['A'], message: 'main segue', timestamp: 3 },
         { oid: 'D', parents: ['C', 'B'], message: 'merge', timestamp: 4 },
       ],
+      conflict: null,
     };
     const view = layoutGraph(input);
     expect(view.nodes.map((node) => [node.oid, node.column])).toEqual([
@@ -119,7 +122,7 @@ describe('commit graph', () => {
     const view = layoutGraph(
       toGraphInput({
         ...state,
-        detached: true,
+        head: 'solto',
         branches: { main: head, experimento: null },
         commits: {
           ...state.commits,
@@ -138,8 +141,40 @@ describe('commit graph', () => {
     expect(view.summary).toContain('HEAD fora da branch');
     expect(view.pendingBranches).toEqual(['experimento']);
     expect(view.nodes.find((node) => node.oid === 'solto')?.parentShorts).toEqual([]);
+    expect(view.nodes.find((node) => node.oid === 'solto')?.head).toBe(true);
     expect(view.edges.some((edge) => edge.to === 'nao-existe')).toBe(false);
     const main = view.nodes.find((node) => node.refs.some((ref) => ref.name === 'main'));
     expect(main?.refs).toEqual([{ name: 'main', current: false }]);
+    expect(view.conflict).toBeNull();
+  });
+
+  it('draws a real merge of two branches and names an open conflict', () => {
+    const join = level3Tasks.find((task) => task.id === 'juntar-arquivos');
+    const clash = level3Tasks.find((task) => task.id === 'resolver-conflito');
+    if (!join || !clash) throw new Error('tarefas de merge ausentes');
+
+    const merged = new GitSession(join.initialState, clock);
+    const diverged = layoutGraph(toGraphInput(merged.getState()));
+    expect(diverged.nodes.some((node) => node.column === 1)).toBe(true);
+    expect(diverged.nodes.some((node) => node.refs.some((ref) => ref.name === 'promocao'))).toBe(
+      true,
+    );
+    merged.execute('git merge promocao');
+    const after = layoutGraph(toGraphInput(merged.getState()));
+    const head = after.nodes.find((node) => node.head);
+    expect(head?.parentShorts).toHaveLength(2);
+    expect(head?.refs).toEqual([{ name: 'main', current: true }]);
+    expect(after.edges.filter((edge) => edge.from === head?.oid)).toHaveLength(2);
+    expect(after.conflict).toBeNull();
+
+    const conflicted = new GitSession(clash.initialState, clock);
+    conflicted.execute('git merge promocao');
+    const conflict = layoutGraph(toGraphInput(conflicted.getState())).conflict;
+    expect(conflict?.kind).toBe('merge');
+    expect(conflict?.incomingName).toBe('promocao');
+    expect(conflict?.paths).toContain('cardapio.txt');
+    expect(conflict ? conflictText(conflict) : '').toBe(
+      'Merge em andamento: promocao em main. Conflito em cardapio.txt.',
+    );
   });
 });

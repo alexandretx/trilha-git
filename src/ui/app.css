@@ -517,7 +517,7 @@ progress::-moz-progress-bar {
   flex: 0 0 auto;
   min-height: 0;
   min-width: 0;
-  max-height: 6.75rem;
+  max-height: 11rem;
   background: var(--paper);
   border: 1px solid var(--control);
 }
@@ -529,10 +529,15 @@ progress::-moz-progress-bar {
 }
 
 .graph-summary,
-.graph-pending {
+.graph-pending,
+.graph-conflict {
   margin: 0;
   padding: 4px 12px 8px;
   font-size: 14px;
+}
+
+.graph-conflict {
+  color: var(--danger);
 }
 
 .graph-scroll {

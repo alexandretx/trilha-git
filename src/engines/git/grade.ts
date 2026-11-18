@@ -16,7 +16,17 @@ export type GitCheck =
   | { op: 'notInIndex'; path: string; fail: string }
   | { op: 'worktree'; path: string; content: string; fail: string }
   | { op: 'untracked'; path: string; fail: string }
-  | { op: 'ran'; prefix: readonly string[]; fail: string };
+  | { op: 'ran'; prefix: readonly string[]; fail: string }
+  | { op: 'branchExists'; name: string; fail: string }
+  | { op: 'branchMissing'; name: string; fail: string }
+  | { op: 'headParentCount'; count: number; fail: string }
+  | { op: 'historyIncludes'; text: string; fail: string }
+  | { op: 'historyLacks'; text: string; fail: string }
+  | { op: 'reachableIncludes'; text: string; fail: string }
+  | { op: 'merging'; value: boolean; fail: string }
+  | { op: 'branchTipFile'; name: string; path: string; content: string; fail: string }
+  | { op: 'branchTipLacks'; name: string; path: string; fail: string }
+  | { op: 'branchTipMessage'; name: string; text: string; fail: string };
 
 function includesText(message: string, text: string): boolean {
   return message.toLowerCase().includes(text.toLowerCase());
@@ -82,9 +92,64 @@ function evaluate(state: RepoState, check: GitCheck, ran: readonly string[][]): 
       return check.path in state.worktree && !(check.path in state.index) ? null : check.fail;
     case 'ran':
       return ran.some((argv) => prefixMatches(argv, check.prefix)) ? null : check.fail;
+    case 'branchExists':
+      return Object.prototype.hasOwnProperty.call(state.branches, check.name) ? null : check.fail;
+    case 'branchMissing':
+      return Object.prototype.hasOwnProperty.call(state.branches, check.name) ? check.fail : null;
+    case 'headParentCount': {
+      const tip = state.head ? state.commits[state.head] : undefined;
+      return tip && tip.parents.length === check.count ? null : check.fail;
+    }
+    case 'historyIncludes':
+      return commits.some((commit) => includesText(commit.message, check.text)) ? null : check.fail;
+    case 'historyLacks':
+      return commits.every((commit) => !includesText(commit.message, check.text))
+        ? null
+        : check.fail;
+    case 'reachableIncludes':
+      return reachableMessages(state).some((message) => includesText(message, check.text))
+        ? null
+        : check.fail;
+    case 'merging':
+      return Boolean(state.merge) === check.value ? null : check.fail;
+    case 'branchTipFile':
+      return branchFiles(state, check.name)[check.path] === check.content ? null : check.fail;
+    case 'branchTipLacks':
+      return check.path in branchFiles(state, check.name) ? check.fail : null;
+    case 'branchTipMessage': {
+      const tip = branchTip(state, check.name);
+      return tip && includesText(tip.message, check.text) ? null : check.fail;
+    }
     default:
       return 'verificação desconhecida.';
   }
+}
+
+function branchTip(state: RepoState, name: string) {
+  const oid = state.branches[name];
+  if (!oid) return undefined;
+  return state.commits[oid];
+}
+
+function branchFiles(state: RepoState, name: string): Record<string, string> {
+  return branchTip(state, name)?.files ?? {};
+}
+
+function reachableMessages(state: RepoState): string[] {
+  if (!state.head) return [];
+  const seen = new Set<string>();
+  const stack = [state.head];
+  const messages: string[] = [];
+  while (stack.length > 0) {
+    const oid = stack.pop();
+    if (!oid || seen.has(oid)) continue;
+    seen.add(oid);
+    const commit = state.commits[oid];
+    if (!commit) continue;
+    messages.push(commit.message);
+    for (const parent of commit.parents) stack.push(parent);
+  }
+  return messages;
 }
 
 function prefixMatches(argv: readonly string[], prefix: readonly string[]): boolean {

@@ -1,5 +1,7 @@
 import type { ContentPack } from '../../core/types';
 import { level1Tasks, type GitTask } from './level1';
+import { level2Tasks } from './level2';
+import { level3Tasks } from './level3';
 
 export const gitPack: ContentPack<GitTask> = {
   id: 'git',
@@ -17,14 +19,14 @@ export const gitPack: ContentPack<GitTask> = {
     {
       id: 'historico',
       title: 'Histórico',
-      summary: 'diff, restore, reset e revert.',
-      tasks: [],
+      summary: 'diff, show, restore, reset e revert.',
+      tasks: level2Tasks,
     },
     {
       id: 'branches',
       title: 'Branches',
-      summary: 'branch, switch, merge e conflitos.',
-      tasks: [],
+      summary: 'branch, switch, checkout, merge e conflitos.',
+      tasks: level3Tasks,
     },
     {
       id: 'remoto',

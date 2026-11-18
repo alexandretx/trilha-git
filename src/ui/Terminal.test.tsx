@@ -7,6 +7,24 @@ import { Terminal } from './Terminal';
 afterEach(() => cleanup());
 
 describe('Terminal', () => {
+  it('prints command output as text', () => {
+    const payload = '<img src=x onerror="alert(1)"><script>alert(1)</script>';
+    const { container } = render(
+      <Terminal
+        lines={[
+          { kind: 'cmd', text: payload },
+          { kind: 'out', text: payload },
+        ]}
+        onSubmit={() => undefined}
+      />,
+    );
+    const log = screen.getByRole('log');
+    expect(log.textContent).toContain(payload);
+    expect(log.querySelector('script, img')).toBeNull();
+    expect(container.querySelector('script')).toBeNull();
+    expect(log.innerHTML).toContain('&lt;script&gt;');
+  });
+
   it('inserts tokens, completes with Tab, and recalls history', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
@@ -27,7 +45,7 @@ describe('Terminal', () => {
 
     await user.clear(input);
     await user.type(input, 'git sta');
-    await user.click(screen.getByRole('button', { name: 'Completar comando' }));
+    await user.click(screen.getByRole('button', { name: 'Tab: completar comando' }));
     expect(input.value).toBe('git status');
 
     await user.click(screen.getByRole('button', { name: 'Executar' }));

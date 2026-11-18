@@ -483,7 +483,8 @@ progress::-moz-progress-bar {
 }
 
 .btn:disabled {
-  opacity: 0.55;
+  color: var(--soft);
+  border-style: dashed;
 }
 
 .btn.primary {
@@ -766,15 +767,6 @@ html[data-keyboard='open'] .command-help {
 
   .actions {
     margin-top: 8px;
-  }
-
-  .keys {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-
-  .btn.key {
-    flex: 0 0 auto;
   }
 }
 

@@ -32,7 +32,7 @@ export function CommitGraph({ state }: CommitGraphProps) {
 
 function GraphSheet({ view }: { view: GraphView }) {
   return (
-    <div className="graph-scroll">
+    <div className="graph-scroll" tabIndex={0} aria-label="Commits, do mais novo ao mais antigo">
       <div className="graph-sheet" style={{ minWidth: view.width }}>
         <svg
           className="graph-rails"

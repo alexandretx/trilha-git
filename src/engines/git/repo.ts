@@ -14,19 +14,54 @@ export interface CommitData {
   files: Record<string, string>;
 }
 
+export type ConflictLabel = 'both modified' | 'both added' | 'deleted by them' | 'deleted by us';
+
+export interface ConflictMark {
+  path: string;
+  label: ConflictLabel;
+}
+
+/** Set while `merge` or `revert` is waiting for a commit or `--abort`. */
+export interface PendingMerge {
+  kind: 'merge' | 'revert';
+  head: string;
+  branch: string;
+  incoming: string;
+  incomingName: string;
+  message: string;
+  unmerged: ConflictMark[];
+  untracked: Record<string, string>;
+}
+
 export interface RepoState {
   initialized: boolean;
   branch: string;
   head: string | null;
   commits: Record<string, CommitData>;
+  /** Branch name → tip oid. `null` is an unborn branch (init, no commit yet). */
+  branches: Record<string, string | null>;
   index: Record<string, string>;
   worktree: Record<string, string>;
   dirs: string[];
+  merge: PendingMerge | null;
+}
+
+/** `id` defaults to the list index ("0", "1"). `parents` defaults to the previous commit; [] starts a root. */
+export interface SeedCommit {
+  message: string;
+  files: Record<string, string>;
+  timestamp?: number;
+  id?: string;
+  parents?: readonly string[];
 }
 
 export interface GitInitialState {
   initialized?: boolean;
-  commits?: { message: string; files: Record<string, string>; timestamp?: number }[];
+  commits?: readonly SeedCommit[];
+  /** Branch name → seed id. Omit to keep main at the last commit. */
+  branches?: Record<string, string>;
+  /** Current branch after the seed is built. Defaults to main. */
+  branch?: string;
   worktree?: Record<string, string>;
   index?: Record<string, string>;
   dirs?: string[];
@@ -38,9 +73,11 @@ export function emptyRepo(): RepoState {
     branch: 'main',
     head: null,
     commits: {},
+    branches: {},
     index: {},
     worktree: {},
     dirs: [],
+    merge: null,
   };
 }
 
@@ -90,13 +127,14 @@ export function commitIndex(
   state: RepoState,
   message: string,
   timestamp: number,
+  parents: readonly string[] = state.head ? [state.head] : [],
 ): { state: RepoState; summary: string } {
   const files = { ...state.index };
   const tree = hashTree(files).oid;
-  const parents = state.head ? [state.head] : [];
+  const parentList = [...parents];
   const oid = hashCommit({
     tree,
-    parents,
+    parents: parentList,
     author: AUTHOR,
     timestamp,
     message,
@@ -104,7 +142,7 @@ export function commitIndex(
   const commit: CommitData = {
     oid,
     tree,
-    parents,
+    parents: parentList,
     message,
     author: AUTHOR,
     timestamp,
@@ -115,6 +153,8 @@ export function commitIndex(
     head: oid,
     commits: { ...state.commits, [oid]: commit },
     index: files,
+    branches: { ...state.branches, [state.branch]: oid },
+    merge: null,
   });
   return { state: next, summary: formatCommit(state, next, commit) };
 }
@@ -215,11 +255,13 @@ export function formatStatus(state: RepoState): string {
   const staged: string[] = [];
   const unstaged: string[] = [];
   const untracked: string[] = [];
+  const conflicted = new Set(state.merge?.unmerged.map((entry) => entry.path) ?? []);
   const paths = [
     ...new Set([...Object.keys(head), ...Object.keys(state.index), ...Object.keys(state.worktree)]),
   ].sort();
 
   for (const path of paths) {
+    if (conflicted.has(path)) continue;
     const headContent = head[path];
     const indexContent = state.index[path];
     const workContent = state.worktree[path];
@@ -249,7 +291,36 @@ export function formatStatus(state: RepoState): string {
   }
 
   const lines = [`On branch ${state.branch}`];
-  if (!state.head) {
+  if (state.merge?.kind === 'merge') {
+    if (state.merge.unmerged.length > 0) {
+      lines.push(
+        'You have unmerged paths.',
+        '  (fix conflicts and run "git commit")',
+        '  (use "git merge --abort" to abort the merge)',
+      );
+    } else {
+      lines.push(
+        'All conflicts fixed but you are still merging.',
+        '  (use "git commit" to conclude merge)',
+      );
+    }
+    lines.push('');
+  } else if (state.merge?.kind === 'revert') {
+    const short = state.merge.incoming.slice(0, 7);
+    lines.push(`You are currently reverting commit ${short}.`);
+    if (state.merge.unmerged.length > 0) {
+      lines.push(
+        '  (fix conflicts and run "git revert --continue")',
+        '  (use "git revert --abort" to cancel the revert operation)',
+      );
+    } else {
+      lines.push(
+        '  (all conflicts fixed: run "git revert --continue")',
+        '  (use "git revert --abort" to cancel the revert operation)',
+      );
+    }
+    lines.push('');
+  } else if (!state.head) {
     lines.push('', 'No commits yet', '');
   }
 
@@ -259,6 +330,14 @@ export function formatStatus(state: RepoState): string {
       ? '  (use "git restore --staged <file>..." to unstage)'
       : '  (use "git rm --cached <file>..." to unstage)';
     lines.push(hint, ...staged, '');
+  }
+
+  if (state.merge && state.merge.unmerged.length > 0) {
+    lines.push('Unmerged paths:', '  (use "git add <file>..." to mark resolution)');
+    for (const entry of state.merge.unmerged) {
+      lines.push(`\t${`${entry.label}:`.padEnd(17, ' ')}${entry.path}`);
+    }
+    lines.push('');
   }
 
   if (unstaged.length > 0) {
@@ -280,7 +359,10 @@ export function formatStatus(state: RepoState): string {
     );
   }
 
-  if (staged.length === 0 && unstaged.length === 0 && untracked.length === 0) {
+  const conflictedLeft = (state.merge?.unmerged.length ?? 0) > 0;
+  if (conflictedLeft && staged.length === 0) {
+    lines.push('no changes added to commit (use "git add" and/or "git commit -a")');
+  } else if (staged.length === 0 && unstaged.length === 0 && untracked.length === 0) {
     if (!state.head) lines.push('');
     lines.push('nothing to commit, working tree clean');
   } else if (staged.length === 0 && untracked.length > 0 && unstaged.length === 0) {
@@ -292,11 +374,53 @@ export function formatStatus(state: RepoState): string {
   return lines.join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
+function commitIsAncestor(state: RepoState, ancestor: string, descendant: string): boolean {
+  if (ancestor === descendant) return false;
+  const seen = new Set<string>();
+  const stack = [descendant];
+  while (stack.length > 0) {
+    const oid = stack.pop();
+    if (!oid || seen.has(oid)) continue;
+    seen.add(oid);
+    const commit = state.commits[oid];
+    if (!commit) continue;
+    for (const parent of commit.parents) {
+      if (parent === ancestor) return true;
+      stack.push(parent);
+    }
+  }
+  return false;
+}
+
+/** Every ancestor of HEAD, children before parents. `history` stays first-parent. */
+export function logHistory(state: RepoState): CommitData[] {
+  if (!state.head) return [];
+  const seen = new Set<string>();
+  const stack = [state.head];
+  const commits: CommitData[] = [];
+  while (stack.length > 0) {
+    const oid = stack.pop();
+    if (!oid || seen.has(oid)) continue;
+    seen.add(oid);
+    const commit = state.commits[oid];
+    if (!commit) continue;
+    commits.push(commit);
+    for (const parent of commit.parents) stack.push(parent);
+  }
+  commits.sort((left, right) => {
+    if (left.timestamp !== right.timestamp) return right.timestamp - left.timestamp;
+    if (commitIsAncestor(state, left.oid, right.oid)) return 1;
+    if (commitIsAncestor(state, right.oid, left.oid)) return -1;
+    return left.oid < right.oid ? -1 : left.oid > right.oid ? 1 : 0;
+  });
+  return commits;
+}
+
 export function formatLog(
   state: RepoState,
   options: { oneline: boolean; limit: number | null },
 ): string {
-  let commits = history(state);
+  let commits = logHistory(state);
   if (options.limit !== null) commits = commits.slice(0, options.limit);
   if (options.oneline) {
     return commits
@@ -356,20 +480,63 @@ function stageAll(state: RepoState): RepoState {
 
 export function createRepo(initial: GitInitialState = {}, clock: Clock = systemClock): RepoState {
   let state = emptyRepo();
-  if (initial.initialized || (initial.commits?.length ?? 0) > 0) {
-    state = { ...state, initialized: true };
+  const seeds = initial.commits ?? [];
+  if (initial.initialized || seeds.length > 0) {
+    state = { ...state, initialized: true, branches: { main: null } };
   }
-  const commits = initial.commits ?? [];
-  const base = Math.floor(clock.now() / 1000) - commits.length * 60;
-  commits.forEach((commit, index) => {
+  const ids = new Map<string, string>();
+  const base = Math.floor(clock.now() / 1000) - seeds.length * 60;
+  seeds.forEach((commit, index) => {
+    const id = commit.id ?? String(index);
+    const parentIds =
+      commit.parents ?? (index === 0 ? [] : [seeds[index - 1]?.id ?? String(index - 1)]);
+    const parentOids = parentIds.map((parentId) => {
+      const oid = ids.get(parentId);
+      if (!oid) throw new Error(`unknown parent commit "${parentId}"`);
+      return oid;
+    });
     state = {
       ...state,
       initialized: true,
+      head: parentOids[0] ?? null,
       worktree: { ...commit.files },
       index: { ...commit.files },
     };
-    state = commitIndex(state, commit.message, commit.timestamp ?? base + index * 60).state;
+    state = commitIndex(
+      state,
+      commit.message,
+      commit.timestamp ?? base + index * 60,
+      parentOids,
+    ).state;
+    const head = state.head;
+    if (!head) throw new Error(`commit "${id}" was not created`);
+    ids.set(id, head);
   });
+
+  if (initial.branches) {
+    const branches = { ...state.branches };
+    for (const [name, seedId] of Object.entries(initial.branches)) {
+      const oid = ids.get(seedId);
+      if (!oid) throw new Error(`branch ${name} points at unknown commit "${seedId}"`);
+      branches[name] = oid;
+    }
+    state = { ...state, branches };
+  }
+
+  if (initial.branch || initial.branches) {
+    const currentName = initial.branch ?? state.branch;
+    if (!(currentName in state.branches)) throw new Error(`unknown branch "${currentName}"`);
+    const tip = state.branches[currentName] ?? null;
+    const files = tip ? { ...(state.commits[tip]?.files ?? {}) } : {};
+    state = {
+      ...state,
+      branch: currentName,
+      head: tip,
+      index: { ...files },
+      worktree: { ...files },
+    };
+  }
+
   if (initial.worktree) state = { ...state, worktree: { ...initial.worktree } };
   if (initial.index) state = { ...state, index: { ...initial.index } };
   if (initial.dirs) state = { ...state, dirs: [...state.dirs, ...initial.dirs] };

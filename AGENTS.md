@@ -138,9 +138,9 @@ Owns test gaps, abuse of the session (path escape, huge input, malformed lines),
 
 ## Phase map
 
-1. **Core (this repository state).** Scaffold, Git engine through the basic commands, mastery, Level 1 (Básico), a playable UI, PWA shell.
-2. **Histórico.** `diff`, `restore`, `reset`, `revert`, and the tasks for that level.
-3. **Branches.** Branch, switch, merge, conflicts.
+1. **Core.** Scaffold, Git engine through the basic commands, mastery, Level 1 (Básico), a playable UI, PWA shell.
+2. **Histórico.** `diff`, `show`, `restore`, `reset`, `revert`, and the tasks for that level.
+3. **Branches.** Branch, switch, checkout, merge, conflicts, and the tasks for that level.
 4. **Remoto.** A simulated remote: clone, remote, fetch, pull, push.
 5. **Avançado.** Rebase, stash, cherry-pick, tag, reflog, bisect.
 6. **Accounts.** Supabase sync behind `ProgressStore`, still optional. The app keeps working offline with the local store.

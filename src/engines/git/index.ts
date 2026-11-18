@@ -11,5 +11,12 @@ export const gitEngine: Engine<RepoState, GitInitialState> = {
 
 export { gradeGit, gitGrader, type GitCheck } from './grade';
 export { GitSession } from './session';
-export { systemClock, type CommitData, type GitInitialState, type RepoState } from './repo';
+export {
+  systemClock,
+  type CommitData,
+  type GitInitialState,
+  type PendingMerge,
+  type RepoState,
+  type SeedCommit,
+} from './repo';
 export { AUTHOR, TIMEZONE } from './objects';

@@ -1,17 +1,13 @@
 import type { Clock, CommandOutput } from '../../core/types';
+import { runBranch, runCheckout, runMerge, runSwitch } from './branch-ops';
+import { performCommit } from './commit';
+import { runDiff, runReset, runRestore, runRevert, runShow } from './history-ops';
 import type { ParsedCommand } from './parse';
-import { baseName, normalizePath, parentPath } from './paths';
-import {
-  commitIndex,
-  formatLog,
-  formatStatus,
-  headFiles,
-  history,
-  recordsEqual,
-  stagePath,
-  withDirs,
-  type RepoState,
-} from './repo';
+import { baseName, isInside, normalizePath, parentPath } from './paths';
+import { formatLog, formatStatus, history, stagePath, withDirs, type RepoState } from './repo';
+
+const GIT_COMMANDS =
+  'init, status, add, commit, log, diff, show, restore, reset, revert, branch, switch, checkout, merge';
 
 const MAX_FILE = 100_000;
 
@@ -208,7 +204,7 @@ function runRm(state: RepoState, args: string[]) {
 function runGit(state: RepoState, args: string[], clock: Clock) {
   const [sub, ...rest] = args;
   if (!sub || sub === '--help' || sub === 'help') {
-    const text = 'usage: git <command>\n\nDisponíveis agora: init, status, add, commit, log.\n';
+    const text = `usage: git <command>\n\nDisponíveis agora: ${GIT_COMMANDS}.\n`;
     return { state, output: output(sub ? text : '', sub ? '' : text, sub ? 0 : 1) };
   }
   if (sub === 'init') return runInit(state);
@@ -216,13 +212,22 @@ function runGit(state: RepoState, args: string[], clock: Clock) {
   if (missing) return { state, output: missing };
   if (sub === 'status') return runStatus(state, rest);
   if (sub === 'add') return runAdd(state, rest);
-  if (sub === 'commit') return runCommit(state, rest, clock);
+  if (sub === 'commit') return performCommit(state, rest, clock);
   if (sub === 'log') return runLog(state, rest);
+  if (sub === 'diff') return runDiff(state, rest);
+  if (sub === 'show') return runShow(state, rest);
+  if (sub === 'restore') return runRestore(state, rest);
+  if (sub === 'reset') return runReset(state, rest);
+  if (sub === 'revert') return runRevert(state, rest, clock);
+  if (sub === 'branch') return runBranch(state, rest);
+  if (sub === 'switch') return runSwitch(state, rest);
+  if (sub === 'checkout') return runCheckout(state, rest);
+  if (sub === 'merge') return runMerge(state, rest, clock);
   return {
     state,
     output: output(
       '',
-      `git: '${sub}' is not a git command. See 'git --help'.\nDisponíveis agora: init, status, add, commit, log.\n`,
+      `git: '${sub}' is not a git command. See 'git --help'.\nDisponíveis agora: ${GIT_COMMANDS}.\n`,
       1,
     ),
   };
@@ -236,7 +241,12 @@ function runInit(state: RepoState) {
     };
   }
   return {
-    state: { ...state, initialized: true, branch: 'main' },
+    state: {
+      ...state,
+      initialized: true,
+      branch: 'main',
+      branches: { ...state.branches, main: null },
+    },
     output: output('Initialized empty Git repository in /repo/.git/\n'),
   };
 }
@@ -280,90 +290,16 @@ function runAdd(state: RepoState, args: string[]) {
       };
     }
     next = staged;
+    if (next.merge) {
+      const unmerged = next.merge.unmerged.filter((entry) => !covers(entry.path, path));
+      next = { ...next, merge: { ...next.merge, unmerged } };
+    }
   }
   return { state: next, output: output() };
 }
 
-function runCommit(state: RepoState, args: string[], clock: Clock) {
-  const parsed = parseCommitArgs(args);
-  if ('error' in parsed) return fail(state, parsed.error);
-  if (parsed.message === null) {
-    return fail(state, 'falta a mensagem do commit. Use git commit -m "mensagem".');
-  }
-  if (parsed.message.trim() === '') return fail(state, 'a mensagem do commit está vazia.');
-
-  let next = state;
-  if (parsed.all) {
-    const index = { ...next.index };
-    for (const path of Object.keys(index)) {
-      if (path in next.worktree) index[path] = next.worktree[path] ?? '';
-      else delete index[path];
-    }
-    next = { ...next, index };
-  }
-
-  const head = headFiles(next);
-  if (recordsEqual(next.index, head)) {
-    const untracked = Object.keys(next.worktree).filter((path) => !(path in next.index));
-    const dirty = Object.keys(next.index).some((path) => next.index[path] !== next.worktree[path]);
-    if (!dirty && untracked.length > 0) {
-      return {
-        state,
-        output: output(
-          '',
-          'nothing added to commit but untracked files present (use "git add" to track)\n',
-          1,
-        ),
-      };
-    }
-    if (dirty) {
-      return {
-        state,
-        output: output(
-          '',
-          'no changes added to commit (use "git add" and/or "git commit -a")\n',
-          1,
-        ),
-      };
-    }
-    return { state, output: output('', 'nothing to commit, working tree clean\n', 1) };
-  }
-
-  const committed = commitIndex(next, parsed.message, Math.floor(clock.now() / 1000));
-  return { state: committed.state, output: output(`${committed.summary}\n`) };
-}
-
-function parseCommitArgs(
-  args: string[],
-): { all: boolean; message: string | null } | { error: string } {
-  let all = false;
-  const messages: string[] = [];
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (!arg) continue;
-    if (arg === '-a' || arg === '--all') {
-      all = true;
-      continue;
-    }
-    if (arg === '-am') {
-      all = true;
-      const message = args[index + 1];
-      if (message === undefined) return { error: 'falta a mensagem depois de -am.' };
-      messages.push(message);
-      index += 1;
-      continue;
-    }
-    if (arg === '-m' || arg === '--message') {
-      const message = args[index + 1];
-      if (message === undefined) return { error: 'falta a mensagem depois de -m.' };
-      messages.push(message);
-      index += 1;
-      continue;
-    }
-    if (arg.startsWith('-')) return { error: `error: unknown option '${arg}'` };
-    return { error: `git commit não aceita o argumento "${arg}". Use -m "mensagem".` };
-  }
-  return { all, message: messages.length > 0 ? messages.join('\n\n') : null };
+function covers(path: string, spec: string): boolean {
+  return spec === '.' || path === spec || isInside(path, spec);
 }
 
 function runLog(state: RepoState, args: string[]) {

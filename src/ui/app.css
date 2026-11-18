@@ -409,6 +409,14 @@ progress::-moz-progress-bar {
   background: var(--raised);
 }
 
+.lesson-head h1 {
+  margin-bottom: 0;
+}
+
+.lesson-head {
+  padding-bottom: 12px;
+}
+
 .scenario.is-folded {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -738,6 +746,68 @@ html[data-keyboard='open'] .command-help {
     gap: 8px;
   }
 
+  .screen.task:has(.workbench) {
+    display: grid;
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) clamp(15.5rem, 54%, 42rem);
+  }
+
+  .screen.task:has(.workbench) > .notice {
+    grid-row: 1;
+    margin-bottom: 8px;
+  }
+
+  .screen.task:has(.workbench) > .task-side {
+    grid-row: 2;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .screen.task:has(.workbench) > .workbench {
+    grid-row: 3;
+    min-height: 0;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .screen.task:has(.workbench) .lesson {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-top: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .screen.task:has(.workbench) .lesson-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding-top: 16px;
+    background: var(--raised);
+  }
+
+  .commit-graph {
+    /* Give up height before the command dock does. */
+    flex: 0 100 auto;
+    min-height: 0;
+    max-height: min(11rem, 34%);
+    overflow: hidden;
+  }
+
+  .terminal {
+    flex: 1 1 calc(13.75rem + env(safe-area-inset-bottom, 0px));
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .terminal-log {
+    /* Start from nothing so output scrolls instead of pushing the field down. */
+    flex-basis: 0;
+    height: 0;
+    min-height: 0;
+  }
+
   .commit-graph h2 {
     padding: 6px 12px 0;
   }
@@ -749,6 +819,11 @@ html[data-keyboard='open'] .command-help {
 
   .workbench {
     gap: 8px;
+  }
+
+  html[data-keyboard='open'] .screen.task:has(.workbench) {
+    gap: 0;
+    grid-template-rows: auto minmax(0, 1fr) clamp(13.5rem, 74%, 42rem);
   }
 }
 

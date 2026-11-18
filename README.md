@@ -1,10 +1,18 @@
 # Trilha Git
 
+O app está no ar: [trilha-git.vercel.app](https://trilha-git.vercel.app). A Vercel publica cada commit da branch `main`.
+
 Aplicação para praticar Git no navegador. Você digita comandos num terminal simulado. Um repositório em memória reage. A tarefa é corrigida pelo estado final desse repositório, então mais de um caminho vale.
 
 O projeto é de Alexandre Teixeira ([alexandretx](https://github.com/alexandretx)), de Salvador. A interface está em português. Os identificadores e as mensagens de commit estão em inglês. A saída dos comandos `git` fica em inglês, como no Git de verdade. Os avisos do próprio app ficam em português.
 
 Não é o Git de verdade e não usa WASM. Nada aqui mexe no sistema de arquivos da máquina.
+
+Capturas de 18 de novembro de 2026, no tema claro. Básico está aberto. Histórico, Branches, Remoto e Avançado aparecem fechados até 80% de domínio do nível anterior.
+
+<img src="docs/trail-phone.png" alt="Trilha no celular, tema claro. Básico aberto, nenhuma tarefa concluída. Histórico, Branches, Remoto e Avançado fechados." width="393" height="1841">
+
+<img src="docs/trail-desktop.png" alt="Trilha no computador, tema claro. Básico aberto, nenhuma tarefa concluída. Histórico, Branches, Remoto e Avançado fechados." width="1280" height="1731">
 
 ## Como funciona
 
@@ -79,7 +87,7 @@ Linux, Bash ou SQL entram como motor mais pacote. Não como um caso especial na 
 3. **Branches.** `branch`, `switch`, `checkout`, `merge`, conflitos, e as tarefas desse nível.
 4. **Remoto.** Remoto simulado: `clone`, `remote`, `fetch`, `pull`, `push`.
 5. **Avançado.** `rebase`, `stash`, `cherry-pick`, `tag`, `reflog`, `bisect`.
-6. **Conta.** Sincronizar o progresso atrás do `ProgressStore`. O app continua usável offline.
-7. **Publicação.** Hospedar o PWA. O `vercel.json` já descreve os cabeçalhos do site estático. A publicação ainda não foi feita.
+6. **Conta.** Opcional. Login e sincronização do progresso com Supabase, atrás do `ProgressStore`, ainda não estão no app. O progresso fica no `localStorage` deste navegador, e o app continua usável offline.
+7. **Publicação.** Feita. O PWA está em [trilha-git.vercel.app](https://trilha-git.vercel.app). A Vercel publica cada commit de `main`. O `vercel.json` descreve os cabeçalhos do site estático.
 
 Os níveis 4 e 5 aparecem na trilha com o nome e a regra de abertura. As tarefas deles ainda não existem.

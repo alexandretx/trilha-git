@@ -200,6 +200,32 @@ describe('git session', () => {
     ).toEqual({});
   });
 
+  it('does not run substitutions, HTML, or a path that leaves the repository', () => {
+    const repo = session({ initialized: true });
+    const echoed = repo.execute('echo $(id) `whoami`');
+    expect(echoed.exitCode).toBe(0);
+    expect(echoed.stdout).toContain('$(id)');
+    expect(echoed.stdout).toContain('`whoami`');
+    const markup = repo.execute(`echo '<img src=x onerror="alert(1)"><script>alert(1)</script>'`);
+    expect(markup.exitCode).toBe(0);
+    expect(markup.stdout).toContain('<script>alert(1)</script>');
+    expect(repo.execute('echo <script>alert(1)</script>').exitCode).not.toBe(0);
+    expect(repo.execute('echo x > ../segredo').exitCode).toBe(1);
+    expect(repo.execute('echo x > /tmp/pwn').exitCode).toBe(1);
+    expect(repo.execute('echo x > ~/segredo').exitCode).toBe(1);
+    expect(repo.execute('cat foo/../../etc/passwd').stderr).toContain('fora do repositório');
+    expect(repo.getState().worktree['segredo']).toBeUndefined();
+  });
+
+  it('rejects a line past the length cap and an append past the file cap', () => {
+    expect(parseCommandLine(`echo ${'a'.repeat(8000)}`).ok).toBe(false);
+    const repo = session({ initialized: true, worktree: { 'big.txt': 'a'.repeat(100_000) } });
+    const appended = repo.execute('echo x >> big.txt');
+    expect(appended.exitCode).toBe(1);
+    expect(appended.stderr).toContain('grande demais');
+    expect(repo.getState().worktree['big.txt']).toHaveLength(100_000);
+  });
+
   it('keeps files inside the repository and supports the small shell', () => {
     const repo = session({ initialized: true });
     expect(repo.execute('echo segredo > ../segredo').exitCode).toBe(1);

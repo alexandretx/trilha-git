@@ -30,32 +30,32 @@ Two themes, both first-class. The first visit follows `prefers-color-scheme`. Th
 
 Light:
 
-| Token | Hex | Use |
-| --- | --- | --- |
-| paper | `#f3efe6` | Page |
-| paper-raised | `#e7e1d4` | Lesson block |
-| ink | `#1c1915` | Primary text |
-| ink-soft | `#4a453c` | Secondary text |
-| line | `#d4cec1` | Hairline between rows |
-| control | `#5e594f` | Input border, focus-adjacent edges |
-| accent | `#2c5640` | Primary button, current task, prompt |
-| accent-ink | `#f3efe6` | Text on the accent button |
-| danger | `#8c2f2f` | Failed check text |
+| Token        | Hex       | Use                                  |
+| ------------ | --------- | ------------------------------------ |
+| paper        | `#f3efe6` | Page                                 |
+| paper-raised | `#e7e1d4` | Lesson block                         |
+| ink          | `#1c1915` | Primary text                         |
+| ink-soft     | `#4a453c` | Secondary text                       |
+| line         | `#d4cec1` | Hairline between rows                |
+| control      | `#5e594f` | Input border, focus-adjacent edges   |
+| accent       | `#2c5640` | Primary button, current task, prompt |
+| accent-ink   | `#f3efe6` | Text on the accent button            |
+| danger       | `#8c2f2f` | Failed check text                    |
 
 Dark:
 
-| Token | Hex | Use |
-| --- | --- | --- |
-| paper | `#141311` | Page |
-| paper-raised | `#1e1c19` | Lesson block |
-| terminal | `#0c0b0a` | Terminal slab |
-| ink | `#ece7dc` | Primary text |
-| ink-soft | `#b7b1a6` | Secondary text |
-| line | `#3a3630` | Hairline between rows |
-| control | `#9a9488` | Input border |
-| accent | `#e0b56a` | Primary button, current task, prompt |
-| accent-ink | `#1c1915` | Text on the accent button |
-| danger | `#e7b6b2` | Failed check text |
+| Token        | Hex       | Use                                  |
+| ------------ | --------- | ------------------------------------ |
+| paper        | `#141311` | Page                                 |
+| paper-raised | `#1e1c19` | Lesson block                         |
+| terminal     | `#0c0b0a` | Terminal slab                        |
+| ink          | `#ece7dc` | Primary text                         |
+| ink-soft     | `#b7b1a6` | Secondary text                       |
+| line         | `#3a3630` | Hairline between rows                |
+| control      | `#9a9488` | Input border                         |
+| accent       | `#e0b56a` | Primary button, current task, prompt |
+| accent-ink   | `#1c1915` | Text on the accent button            |
+| danger       | `#e7b6b2` | Failed check text                    |
 
 In the light theme the terminal uses `paper` for its background and `ink` for output, with a `control` border. A light terminal is easier to study. The dark theme is the one that gets the near-black slab.
 

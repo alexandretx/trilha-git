@@ -5,6 +5,7 @@ Portfolio project for Alexandre Teixeira (GitHub `alexandretx`). A PWA that teac
 User-facing copy is Brazilian Portuguese. Identifiers, commit messages, and this file are English.
 
 <!-- antislop:start -->
+
 ## antislop
 
 For UI, copy, people, mobile layout, or code comments work, read these installed skill files directly (use these paths even if a same-named global skill exists):
@@ -23,6 +24,7 @@ Only an explicit choice of antislop during or after selects a session mode. A re
 If the mode is unresolved, ask during/after and end the response; wait for the answer before any UI review, planning, or concept. For read-only tasks, put the active-mode notice only at the start of the final answer, never in progress messages. For editing tasks, announce before the first edit and omit it from the final answer.
 
 To update antislop later: `npx antislop-ai --update`, or run `npx antislop-ai` and pick Overwrite them.
+
 <!-- antislop:end -->
 
 ## Architecture
@@ -77,8 +79,8 @@ Failed checks return Portuguese sentences the screen can show as-is.
 
 ```ts
 interface ProgressStore {
-  load(): Promise<ProgressSnapshot | null>
-  save(snapshot: ProgressSnapshot): Promise<void>
+  load(): Promise<ProgressSnapshot | null>;
+  save(snapshot: ProgressSnapshot): Promise<void>;
 }
 ```
 

@@ -40,6 +40,7 @@ function TaskPlay({
   onAttempt: (outcome: Omit<TaskOutcome, 'score'>) => void;
 }) {
   const sessionRef = useRef<ReturnType<typeof engine.createSession> | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
   const [lines, setLines] = useState<TerminalLine[]>([intro]);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [failures, setFailures] = useState(0);
@@ -104,6 +105,11 @@ function TaskPlay({
     });
   }
 
+  useEffect(() => {
+    if (!feedback) return;
+    feedbackRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [feedback]);
+
   const shownHints = task.hints.slice(0, hintsUsed);
   const attemptScore = feedback?.passed
     ? scoreAttempt({ solved: true, firstTry: failures === 0, hintsUsed })
@@ -128,7 +134,11 @@ function TaskPlay({
             </div>
           ) : null}
           {feedback ? (
-            <div className={feedback.passed ? 'feedback ok' : 'feedback fail'} role="status">
+            <div
+            ref={feedbackRef}
+            className={feedback.passed ? 'feedback ok' : 'feedback fail'}
+            role="status"
+          >
               <h2>{feedback.passed ? 'Tarefa concluída' : 'Ainda não'}</h2>
               {feedback.passed ? (
                 <>

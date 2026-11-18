@@ -8,6 +8,7 @@ import {
   recordOutcome,
   scoreAttempt,
   UNLOCK_AT,
+  type ReviewEntry,
 } from './progress';
 import {
   LocalStorageProgressStore,
@@ -63,6 +64,15 @@ describe('mastery', () => {
     expect(conceptMastery('add', tasks, snapshot.outcomes)).toBeCloseTo(0.7);
     expect(levelMastery(tasks, snapshot.outcomes)).toBeCloseTo((1 + 0.7 + 0) / 3);
     expect(levelMastery([], snapshot.outcomes)).toBe(0);
+  });
+
+  it('ignores a score or a review entry that cannot be read', () => {
+    const now = 5_000;
+    const snapshot = recordOutcome(emptyProgress(), outcome('init', 'init', { at: now }), now);
+    snapshot.outcomes.init = { ...snapshot.outcomes.init!, score: Number.NaN };
+    (snapshot.reviews as Record<string, ReviewEntry | null>).bad = null;
+    expect(conceptMastery('init', tasks, snapshot.outcomes)).toBe(0);
+    expect(dueReviewIds(snapshot, now)).toEqual([]);
   });
 
   it('unlocks the next level at 80 percent of the previous one', () => {
@@ -150,7 +160,55 @@ describe('ProgressStore', () => {
 
     data.set(PROGRESS_STORAGE_KEY, '{');
     await expect(store.load()).rejects.toThrow('progresso ilegível');
-    data.set(PROGRESS_STORAGE_KEY, JSON.stringify({ version: 2 }));
+    expect(data.get(PROGRESS_STORAGE_KEY)).toBe('{');
+
+    const future = JSON.stringify({ version: 2, outcomes: {}, reviews: {}, extra: true });
+    data.set(PROGRESS_STORAGE_KEY, future);
     await expect(store.load()).rejects.toThrow('progresso ilegível');
+    expect(data.get(PROGRESS_STORAGE_KEY)).toBe(future);
+
+    data.set(PROGRESS_STORAGE_KEY, 'x'.repeat(200_001));
+    await expect(store.load()).rejects.toThrow('progresso ilegível');
+  });
+
+  it('drops a broken entry and keeps a valid one', async () => {
+    const data = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        data.set(key, value);
+      },
+    };
+    const store = new LocalStorageProgressStore(storage);
+    const valid = recordOutcome(emptyProgress(), outcome('init', 'init')).outcomes.init;
+    data.set(
+      PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        outcomes: { init: valid, broken: null },
+        reviews: { init: null, other: { taskId: 'other', dueAt: 0, intervalDays: 1, streak: 0 } },
+      }),
+    );
+    const loaded = await store.load();
+    expect(loaded?.version).toBe(1);
+    expect(loaded?.outcomes.init?.score).toBe(1);
+    expect(loaded?.outcomes.broken).toBeUndefined();
+    expect(loaded?.reviews.init).toBeUndefined();
+    expect(loaded?.reviews.other?.taskId).toBe('other');
+    expect(JSON.parse(data.get(PROGRESS_STORAGE_KEY) ?? '').version).toBe(1);
+  });
+
+  it('clamps a tampered score into the mastery range', async () => {
+    const data = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        data.set(key, value);
+      },
+    };
+    const store = new LocalStorageProgressStore(storage);
+    const saved = recordOutcome(emptyProgress(), outcome('init', 'init'));
+    saved.outcomes.init = { ...saved.outcomes.init!, score: 4 };
+    data.set(PROGRESS_STORAGE_KEY, JSON.stringify(saved));
+    expect((await store.load())?.outcomes.init?.score).toBe(1);
   });
 });

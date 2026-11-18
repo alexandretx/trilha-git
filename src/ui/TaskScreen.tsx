@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { engine, grader } from '../app/registry';
+import { engine, grader } from '../app/tools';
 import type { TaskOutcome } from '../core/progress';
 import { scoreAttempt } from '../core/progress';
 import { taskById } from '../content/git/pack';

@@ -54,8 +54,16 @@ export function conceptMastery(
 ): number {
   const related = tasks.filter((task) => task.conceptId === conceptId);
   if (related.length === 0) return 0;
-  const total = related.reduce((sum, task) => sum + (outcomes[task.id]?.score ?? 0), 0);
+  const total = related.reduce((sum, task) => sum + storedScore(outcomes[task.id]), 0);
   return total / related.length;
+}
+
+function storedScore(outcome: TaskOutcome | undefined): number {
+  const score = outcome?.score;
+  if (typeof score !== 'number' || !Number.isFinite(score)) return 0;
+  if (score < 0) return 0;
+  if (score > 1) return 1;
+  return score;
 }
 
 /** Average of the concepts in the level. A concept with two tasks does not count twice. */
@@ -118,8 +126,16 @@ export function recordOutcome(
 }
 
 export function dueReviewIds(snapshot: ProgressSnapshot, now: number): string[] {
-  return Object.values(snapshot.reviews)
-    .filter((entry) => entry.dueAt <= now)
+  const due: ReviewEntry[] = [];
+  for (const entry of Object.values(snapshot.reviews)) {
+    if (!entry || typeof entry !== 'object') continue;
+    if (typeof entry.taskId !== 'string') continue;
+    if (typeof entry.dueAt !== 'number' || !Number.isFinite(entry.dueAt) || entry.dueAt > now) {
+      continue;
+    }
+    due.push(entry);
+  }
+  return due
     .sort((left, right) => left.dueAt - right.dueAt || left.taskId.localeCompare(right.taskId))
     .map((entry) => entry.taskId);
 }

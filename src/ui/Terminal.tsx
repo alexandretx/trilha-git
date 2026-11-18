@@ -98,7 +98,13 @@ export function Terminal({ lines, onSubmit }: TerminalProps) {
 
   return (
     <section className="terminal" aria-label="Terminal">
-      <pre ref={logRef} className="terminal-log" role="log">
+      <pre
+        ref={logRef}
+        className="terminal-log"
+        role="log"
+        tabIndex={0}
+        aria-label="Saída do terminal"
+      >
         {lines.map((line, index) => (
           <span key={index} className={`term-line term-${line.kind}`}>
             {line.kind === 'cmd' ? <span className="prompt">$ </span> : null}
@@ -126,7 +132,7 @@ export function Terminal({ lines, onSubmit }: TerminalProps) {
         <button
           className="btn key"
           type="button"
-          aria-label="Completar comando"
+          aria-label="Tab: completar comando"
           onPointerDown={(event) => event.preventDefault()}
           onClick={complete}
           disabled={!canComplete}

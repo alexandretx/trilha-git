@@ -46,16 +46,18 @@ npm run dev
 
 Outros scripts:
 
-| Script              | O que faz                                             |
-| ------------------- | ----------------------------------------------------- |
-| `npm test`          | Vitest: motor, domínio e as soluções dos níveis 1 a 3 |
-| `npm run lint`      | ESLint                                                |
-| `npm run typecheck` | `tsc --noEmit`                                        |
-| `npm run build`     | build de produção, com service worker                 |
-| `npm run preview`   | serve o build                                         |
-| `npm run format`    | Prettier                                              |
+| Script               | O que faz                                                |
+| -------------------- | -------------------------------------------------------- |
+| `npm test`           | Vitest: motor, domínio e as soluções dos níveis 1 a 3    |
+| `npm run e2e`        | Playwright no build, em viewport de celular e desktop    |
+| `npm run lint`       | ESLint                                                   |
+| `npm run typecheck`  | `tsc --noEmit`                                           |
+| `npm run build`      | build de produção, com service worker                    |
+| `npm run preview`    | serve o build                                            |
+| `npm run format`     | Prettier                                                 |
+| `npm run audit:prod` | `npm audit` só das dependências que vão para o navegador |
 
-O CI roda lint, formatação, typecheck, testes e build.
+O CI roda lint, formatação, typecheck, testes, auditoria de produção, build e o Playwright.
 
 Para instalar no celular ou no computador, use o build (`npm run build && npm run preview`) e a opção de instalar do navegador. No `dev` o service worker não fica ligado.
 
@@ -63,8 +65,10 @@ Para instalar no celular ou no computador, use o build (`npm run build && npm ru
 
 1. Crie `src/content/<assunto>/` com níveis, tarefas, estado inicial, verificações, dicas e explicação.
 2. Se o `engineId` for novo, crie `src/engines/<assunto>/` com um motor e um corretor, e registre os dois em `src/app/registry.ts`.
-3. Cada tarefa nova leva um teste: uma solução válida passa, um repositório errado não passa.
+3. Cada tarefa nova leva um teste: uma solução válida passa, um repositório errado não passa. As tarefas dos níveis 1 a 3 também entram em `src/content/git/playthrough.test.ts`.
 4. A trilha lê o pacote pelo registro. A tela não importa o arquivo da tarefa direto.
+
+O mesmo roteiro, com os comandos de verificação, está em `CONTRIBUTING.md`.
 
 Linux, Bash ou SQL entram como motor mais pacote. Não como um caso especial na interface.
 
@@ -76,6 +80,6 @@ Linux, Bash ou SQL entram como motor mais pacote. Não como um caso especial na 
 4. **Remoto.** Remoto simulado: `clone`, `remote`, `fetch`, `pull`, `push`.
 5. **Avançado.** `rebase`, `stash`, `cherry-pick`, `tag`, `reflog`, `bisect`.
 6. **Conta.** Sincronizar o progresso atrás do `ProgressStore`. O app continua usável offline.
-7. **Publicação.** Hospedar o PWA. Ainda não nesta fase.
+7. **Publicação.** Hospedar o PWA. O `vercel.json` já descreve os cabeçalhos do site estático. A publicação ainda não foi feita.
 
 Os níveis 4 e 5 aparecem na trilha com o nome e a regra de abertura. As tarefas deles ainda não existem.

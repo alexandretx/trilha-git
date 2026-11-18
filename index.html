@@ -2,7 +2,10 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
     <meta name="theme-color" content="#f3efe6" />
     <meta
       name="description"
@@ -19,6 +22,8 @@
           theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.dataset.theme = theme;
+        var color = document.querySelector('meta[name="theme-color"]');
+        if (color) color.setAttribute('content', theme === 'dark' ? '#141311' : '#f3efe6');
       } catch (error) {
         document.documentElement.dataset.theme = 'light';
       }

@@ -32,6 +32,41 @@ describe('TaskScreen', () => {
     expect(onAttempt).toHaveBeenCalledWith(expect.objectContaining({ solved: true, hintsUsed: 1 }));
   });
 
+  it('folds a scenario the panel would cut, and opens the rest on request', async () => {
+    const user = userEvent.setup();
+    const rect = HTMLElement.prototype.getBoundingClientRect;
+    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+      if (this.classList.contains('scenario')) {
+        return {
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          right: 120,
+          bottom: window.innerHeight + 80,
+          width: 120,
+          height: window.innerHeight + 80,
+          toJSON() {
+            return {};
+          },
+        };
+      }
+      return rect.call(this);
+    };
+    try {
+      render(<TaskScreen taskId="ler-o-log" onAttempt={vi.fn()} />);
+      const toggle = await screen.findByRole('button', { name: 'Mostrar o enunciado inteiro' });
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(screen.getByText(/grave essa mensagem, exatamente/)).toBeTruthy();
+      await user.click(toggle);
+      expect(
+        screen.getByRole('button', { name: 'Recolher enunciado' }).getAttribute('aria-expanded'),
+      ).toBe('true');
+    } finally {
+      HTMLElement.prototype.getBoundingClientRect = rect;
+    }
+  });
+
   it('says when the address is not a task', () => {
     render(<TaskScreen taskId="nao-existe" onAttempt={vi.fn()} />);
     expect(screen.getByRole('heading', { name: 'Tarefa não encontrada' })).toBeTruthy();

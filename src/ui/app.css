@@ -395,18 +395,30 @@ progress::-moz-progress-bar {
 .task-side {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   min-height: 0;
-  max-height: 34%;
-  overflow: hidden;
+  overflow: visible;
   background: var(--raised);
 }
 
 .lesson {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   padding: 16px 16px 0;
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
   background: var(--raised);
+}
+
+.scenario.is-folded {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.scenario-toggle {
+  margin: 0 0 4px;
 }
 
 .actions {
@@ -502,9 +514,10 @@ progress::-moz-progress-bar {
 .commit-graph {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   min-height: 0;
   min-width: 0;
-  max-height: 9rem;
+  max-height: 6.75rem;
   background: var(--paper);
   border: 1px solid var(--control);
 }
@@ -613,7 +626,7 @@ progress::-moz-progress-bar {
 }
 
 .terminal {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -624,11 +637,11 @@ progress::-moz-progress-bar {
 }
 
 .terminal-log {
-  flex: 1;
+  flex: 1 1 auto;
   margin: 0;
   padding: 12px;
   overflow: auto;
-  min-height: 0;
+  min-height: 5.5rem;
   font-family: var(--mono);
   font-size: 16px;
   line-height: 1.45;
@@ -653,6 +666,7 @@ progress::-moz-progress-bar {
 .keys {
   display: flex;
   flex-wrap: wrap;
+  flex-shrink: 0;
   gap: 8px;
   padding: 8px 8px 0;
 }
@@ -665,6 +679,7 @@ progress::-moz-progress-bar {
 
 .command-form {
   display: grid;
+  flex-shrink: 0;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: end;
@@ -703,16 +718,59 @@ progress::-moz-progress-bar {
   border: 0;
 }
 
-html[data-keyboard='open'] .task-side {
-  max-height: 4.5rem;
-}
-
 html[data-keyboard='open'] .commit-graph {
-  max-height: 3.25rem;
+  display: none;
 }
 
 html[data-keyboard='open'] .command-help {
   display: none;
+}
+
+@media (max-width: 1099px) {
+  .screen.task {
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  .commit-graph h2 {
+    padding: 6px 12px 0;
+  }
+
+  .graph-summary,
+  .graph-pending {
+    padding: 0 12px 4px;
+  }
+
+  .workbench {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 799px) {
+  .command-help {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .actions {
+    margin-top: 8px;
+  }
+
+  .keys {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .btn.key {
+    flex: 0 0 auto;
+  }
 }
 
 html[data-keyboard='open'] .screen.task {
@@ -745,6 +803,13 @@ html[data-keyboard='open'] .screen.task {
     grid-column: 1;
     grid-row: 2;
     max-height: none;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .lesson {
+    flex: 1 1 auto;
+    overflow: auto;
   }
 
   .workbench {
@@ -759,6 +824,7 @@ html[data-keyboard='open'] .screen.task {
   .commit-graph {
     max-height: none;
     height: 100%;
+    flex: 1 1 auto;
   }
 
   .graph-scroll {
@@ -767,6 +833,21 @@ html[data-keyboard='open'] .screen.task {
 
   .terminal {
     min-height: 0;
+  }
+
+  .terminal-log {
+    min-height: 0;
+  }
+
+  .command-help {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 8px 12px 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 }
 

@@ -99,7 +99,9 @@ On a phone the graph sits between the lesson and the terminal and scrolls inside
 
 The keys `git`, `add`, `commit -m`, and `"` sit above the command field. They insert at the caret. `commit -m` leaves the caret between the quotes. Tab, and the Tab key, finish a command when the buffer is a prefix of one the level already uses. Anterior and Seguinte walk the commands of this task. On a desktop keyboard, arrow up and arrow down do the same walk.
 
-The task screen is fixed to the visual viewport. When the on-screen keyboard opens, the screen gets shorter and the field stays at the bottom of what is still visible. The lesson scrolls inside itself. The keys do not appear and disappear while typing, so the field does not jump.
+The task screen is fixed to the visual viewport. When the on-screen keyboard opens, the graph steps aside and the field stays at the bottom of what is still visible. The keys do not appear and disappear while typing, so the field does not jump.
+
+On a phone the scenario is shown in full. If the panel would cut it, the text folds to two lines and a button says "Mostrar o enunciado inteiro". The token keys stay on one row and scroll sideways, so the command output keeps the height. The help sentence stays in the page for the field's description and is visible from 1100px up, where the terminal has the room.
 
 ## First visit
 

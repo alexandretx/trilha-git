@@ -5,6 +5,7 @@ import { scoreAttempt } from '../core/progress';
 import { taskById } from '../content/git/pack';
 import type { RepoState } from '../engines/git';
 import { CommitGraph } from './CommitGraph';
+import { Scenario } from './Scenario';
 import { OfflineNote } from './status';
 import { Terminal, type TerminalLine } from './Terminal';
 
@@ -128,7 +129,7 @@ function TaskPlay({
             <a href="#/">Voltar à trilha</a>
           </p>
           <h1>{task.title}</h1>
-          <p className="scenario">{task.scenario}</p>
+          <Scenario text={task.scenario} />
           {shownHints.length > 0 ? (
             <div className="hints">
               {shownHints.map((hint, index) => (

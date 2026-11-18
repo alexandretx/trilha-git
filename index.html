@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f3efe6" />
+    <meta
+      name="description"
+      content="Pratique Git no navegador. Os comandos mexem em um repositório simulado e a tarefa olha o estado final."
+    />
+    <title>Trilha Git</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <script>
+      try {
+        var saved = localStorage.getItem('trilha-git.theme');
+        var theme = saved === 'light' || saved === 'dark' ? saved : null;
+        if (!theme) {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      } catch (error) {
+        document.documentElement.dataset.theme = 'light';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -135,10 +135,10 @@ function TaskPlay({
           ) : null}
           {feedback ? (
             <div
-            ref={feedbackRef}
-            className={feedback.passed ? 'feedback ok' : 'feedback fail'}
-            role="status"
-          >
+              ref={feedbackRef}
+              className={feedback.passed ? 'feedback ok' : 'feedback fail'}
+              role="status"
+            >
               <h2>{feedback.passed ? 'Tarefa concluída' : 'Ainda não'}</h2>
               {feedback.passed ? (
                 <>

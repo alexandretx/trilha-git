@@ -27,7 +27,9 @@ src/ui/            trilha, tarefa e terminal
 
 Os contratos estão em `src/core/types.ts`: `Engine`, `EngineSession`, `ContentPack`, `Task`, `Grader`, `ProgressStore`. O pacote declara um `engineId`. O app liga os dois no registro (`src/app/registry.ts`).
 
-O motor Git guarda working tree, index, commits com SHA-1 no formato de objeto do Git, branches e HEAD. Nesta fase os comandos são `init`, `status`, `add`, `commit` e `log`, mais `echo` (com `>` e `>>`), `touch`, `cat`, `ls`, `pwd`, `mkdir` e `rm`. A branch inicial é `main`. O autor dos commits é `Estudante <estudante@trilha.local>`, no fuso `-0300`.
+O motor Git guarda working tree, index, commits com SHA-1 no formato de objeto do Git, branches e HEAD. Os comandos são `init`, `status`, `add`, `commit`, `log`, `diff`, `show`, `restore`, `reset`, `revert`, `branch`, `switch`, `checkout` e `merge`, mais `echo` (com `>` e `>>`), `touch`, `cat`, `ls`, `pwd`, `mkdir` e `rm`. A branch inicial é `main`. O autor dos commits é `Estudante <estudante@trilha.local>`, no fuso `-0300`.
+
+O estado do repositório ganhou dois campos: `branches`, o ponteiro de cada branch, e `merge`, preenchido só enquanto um merge ou um revert espera commit ou `--abort`. `commitCount` continua a contar a linha do primeiro pai. `git log` lista todos os ancestrais do HEAD.
 
 `ProgressStore` é assíncrono de propósito. A implementação de hoje é `localStorage`. Uma troca por IndexedDB ou por sincronização depois não precisa reescrever a tela.
 
@@ -44,14 +46,14 @@ npm run dev
 
 Outros scripts:
 
-| Script              | O que faz                                       |
-| ------------------- | ----------------------------------------------- |
-| `npm test`          | Vitest: motor, domínio e as soluções do nível 1 |
-| `npm run lint`      | ESLint                                          |
-| `npm run typecheck` | `tsc --noEmit`                                  |
-| `npm run build`     | build de produção, com service worker           |
-| `npm run preview`   | serve o build                                   |
-| `npm run format`    | Prettier                                        |
+| Script              | O que faz                                             |
+| ------------------- | ----------------------------------------------------- |
+| `npm test`          | Vitest: motor, domínio e as soluções dos níveis 1 a 3 |
+| `npm run lint`      | ESLint                                                |
+| `npm run typecheck` | `tsc --noEmit`                                        |
+| `npm run build`     | build de produção, com service worker                 |
+| `npm run preview`   | serve o build                                         |
+| `npm run format`    | Prettier                                              |
 
 O CI roda lint, formatação, typecheck, testes e build.
 
@@ -68,12 +70,12 @@ Linux, Bash ou SQL entram como motor mais pacote. Não como um caso especial na 
 
 ## Fases
 
-1. **Núcleo.** Ferramentas, motor Git até o básico, domínio, nível Básico jogável, PWA. É o estado deste repositório.
-2. **Histórico.** `diff`, `restore`, `reset`, `revert`.
-3. **Branches.** `branch`, `switch`, `merge`, conflitos.
+1. **Núcleo.** Ferramentas, motor Git até o básico, domínio, nível Básico jogável, PWA.
+2. **Histórico.** `diff`, `show`, `restore`, `reset`, `revert`, e as tarefas desse nível.
+3. **Branches.** `branch`, `switch`, `checkout`, `merge`, conflitos, e as tarefas desse nível.
 4. **Remoto.** Remoto simulado: `clone`, `remote`, `fetch`, `pull`, `push`.
 5. **Avançado.** `rebase`, `stash`, `cherry-pick`, `tag`, `reflog`, `bisect`.
 6. **Conta.** Sincronizar o progresso atrás do `ProgressStore`. O app continua usável offline.
 7. **Publicação.** Hospedar o PWA. Ainda não nesta fase.
 
-Os níveis 2 a 5 aparecem na trilha com o nome e a regra de abertura. As tarefas deles ainda não existem.
+Os níveis 4 e 5 aparecem na trilha com o nome e a regra de abertura. As tarefas deles ainda não existem.

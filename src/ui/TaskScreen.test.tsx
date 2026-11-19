@@ -12,16 +12,24 @@ describe('TaskScreen', () => {
     const onAttempt = vi.fn();
     render(<TaskScreen taskId="iniciar-repositorio" onAttempt={onAttempt} />);
 
+    expect(screen.getByRole('heading', { name: 'O que é' })).toBeTruthy();
+    expect(screen.queryByLabelText('Digite o comando')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Entendi, vamos praticar' }));
     expect(screen.getByText('Repositório ainda não iniciado.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Verificar tarefa' }));
     expect(screen.getByRole('heading', { name: 'Ainda não' })).toBeTruthy();
-    expect(screen.getByText('O repositório ainda não foi iniciado.')).toBeTruthy();
+    expect(screen.getByText(/O repositório ainda não foi iniciado/)).toBeTruthy();
     expect(onAttempt).toHaveBeenCalledWith(expect.objectContaining({ solved: false }));
 
     await user.click(screen.getByRole('button', { name: 'Dica: conceito' }));
     expect(screen.getByText(/git init cria a estrutura/)).toBeTruthy();
 
-    const input = screen.getByLabelText('Comando');
+    const input = screen.getByLabelText('Digite o comando');
+    await user.type(input, 'git status');
+    await user.click(screen.getByRole('button', { name: 'Executar' }));
+    expect(screen.getByText(/git init cria o Git/)).toBeTruthy();
+
+    await user.clear(input);
     await user.type(input, 'git init');
     await user.click(screen.getByRole('button', { name: 'Executar' }));
     expect(screen.getByText('Branch main, nenhum commit.')).toBeTruthy();
@@ -32,39 +40,10 @@ describe('TaskScreen', () => {
     expect(onAttempt).toHaveBeenCalledWith(expect.objectContaining({ solved: true, hintsUsed: 1 }));
   });
 
-  it('folds a scenario the panel would cut, and opens the rest on request', async () => {
-    const user = userEvent.setup();
-    const rect = HTMLElement.prototype.getBoundingClientRect;
-    HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
-      if (this.classList.contains('scenario')) {
-        return {
-          x: 0,
-          y: 0,
-          top: 0,
-          left: 0,
-          right: 120,
-          bottom: window.innerHeight + 80,
-          width: 120,
-          height: window.innerHeight + 80,
-          toJSON() {
-            return {};
-          },
-        };
-      }
-      return rect.call(this);
-    };
-    try {
-      render(<TaskScreen taskId="ler-o-log" onAttempt={vi.fn()} />);
-      const toggle = await screen.findByRole('button', { name: 'Mostrar o enunciado inteiro' });
-      expect(toggle.getAttribute('aria-expanded')).toBe('false');
-      expect(screen.getByText(/grave essa mensagem, exatamente/)).toBeTruthy();
-      await user.click(toggle);
-      expect(
-        screen.getByRole('button', { name: 'Recolher enunciado' }).getAttribute('aria-expanded'),
-      ).toBe('true');
-    } finally {
-      HTMLElement.prototype.getBoundingClientRect = rect;
-    }
+  it('keeps the full scenario in the scrolling lesson', () => {
+    render(<TaskScreen taskId="ler-o-log" onAttempt={vi.fn()} />);
+    expect(screen.getByText(/grave essa mensagem, exatamente/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mostrar o enunciado inteiro' })).toBeNull();
   });
 
   it('says when the address is not a task', () => {

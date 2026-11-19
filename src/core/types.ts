@@ -28,6 +28,37 @@ export interface Grader<TState, TCheck> {
   grade(state: TState, checks: readonly TCheck[], history: readonly string[][]): GradeResult;
 }
 
+/** One token of a command, in the order the learner types it. */
+export interface LessonPiece {
+  token: string;
+  meaning: string;
+}
+
+/** A word this task has to define before the command makes sense. */
+export interface LessonTerm {
+  term: string;
+  meaning: string;
+}
+
+/**
+ * Taught before the learner types. Every task in every pack has one.
+ * `basics` is empty when earlier tasks already defined the words.
+ */
+export interface Lesson {
+  what: string;
+  why: string;
+  analogy: string;
+  inside: string;
+  breakdown: readonly LessonPiece[];
+  example: {
+    commands: readonly string[];
+    output: string;
+    meaning: string;
+  };
+  mistakes: readonly string[];
+  basics: readonly LessonTerm[];
+}
+
 export interface Task<TInitial, TCheck> {
   id: string;
   conceptId: string;
@@ -35,6 +66,7 @@ export interface Task<TInitial, TCheck> {
   scenario: string;
   hints: readonly [string, string, string];
   explanation: string;
+  lesson: Lesson;
   initialState: TInitial;
   checks: readonly TCheck[];
 }

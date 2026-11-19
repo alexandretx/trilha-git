@@ -13,31 +13,34 @@ export const gitPack: ContentPack<GitTask> = {
     {
       id: 'basico',
       title: 'Básico',
-      summary: 'init, status, add, commit e log.',
+      summary:
+        'Iniciar o repositório, ver o estado, preparar arquivos, gravar commits e ler o histórico.',
       tasks: level1Tasks,
     },
     {
       id: 'historico',
       title: 'Histórico',
-      summary: 'diff, show, restore, reset e revert.',
+      summary:
+        'Ver o que mudou, ler um commit antigo, descartar uma edição, voltar um commit e desfazer um commit compartilhado.',
       tasks: level2Tasks,
     },
     {
       id: 'branches',
       title: 'Branches',
-      summary: 'branch, switch, checkout, merge e conflitos.',
+      summary: 'Criar ramos, trocar de ramo, juntar ramos e resolver um conflito.',
       tasks: level3Tasks,
     },
     {
       id: 'remoto',
       title: 'Remoto',
-      summary: 'clone, remote, fetch, pull e push num remoto simulado.',
+      summary: 'Copiar um repositório, ligar um servidor e trazer ou enviar commits.',
       tasks: [],
     },
     {
       id: 'avancado',
       title: 'Avançado',
-      summary: 'rebase, stash, cherry-pick, tag, reflog e bisect.',
+      summary:
+        'Reorganizar commits, guardar trabalho temporário, copiar um commit, marcar uma versão e achar qual commit quebrou algo.',
       tasks: [],
     },
   ],

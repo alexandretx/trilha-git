@@ -77,7 +77,7 @@ Mobile is the base.
 
 - Header: wordmark on the left, theme toggle on the right. Nothing else.
 - Trail: intro, real mastery (a meter plus the percentage computed from progress), review rows if any are due, then the task list. Future levels are text, with the unlock rule written out. They are not links.
-- Task: scenario, then the terminal, then the actions. The command field and Executar stay reachable at the bottom of the viewport. Dica, Reiniciar, and Verificar sit in a wrapping row of targets at least 44px tall.
+- Task: two steps. Aprenda is a reading column, the same measure as the trail. The lesson comes first, then what the task asks. Entendi, vamos praticar opens Pratique. Pratique keeps the goal, then the graph and the terminal. Rever a lição puts the text back in the scrolling column. During practice the command field and Executar stay reachable at the bottom of the viewport. Dica, Reiniciar, and Verificar sit in a wrapping row of targets at least 44px tall. Dica is secondary.
 - Around 800px the trail measure caps near 42rem and stays one column. The task terminal grows; the lesson does not become a sidebar yet. The graph stays above the terminal.
 - Around 1100px the task screen splits: lesson column about 22rem, then the graph and the terminal side by side. The graph column is about 18 to 22rem. The terminal takes the rest. The trail does not split. A trail is a list.
 
@@ -101,7 +101,7 @@ The keys `git`, `add`, `commit -m`, and `"` sit above the command field. They in
 
 The task screen is fixed to the visual viewport. When the on-screen keyboard opens, the graph steps aside and the field stays at the bottom of what is still visible. The keys do not appear and disappear while typing, so the field does not jump.
 
-On a phone the scenario is shown in full. If the panel would cut it, the text folds to two lines and a button says "Mostrar o enunciado inteiro". The token keys stay on one row and scroll sideways, so the command output keeps the height. The help sentence stays in the page for the field's description and is visible from 1100px up, where the terminal has the room.
+On a phone the scenario stays in the scrolling lesson column, in full. The token keys stay on one row and scroll sideways, so the command output keeps the height. The help sentence stays in the page for the field's description and is visible from 1100px up, where the terminal has the room.
 
 ## First visit
 
@@ -137,7 +137,7 @@ The installed app needs an icon. The mark is the letters `tg` in IBM Plex Mono o
 
 - Paper and ink, because the lesson is something you read before you type.
 - Forest in the light theme and brass in the dark theme, because one accent has to be visible on each ground without turning the screen into a theme costume.
-- The terminal is the focal point, because the product is practice.
+- The lesson is the focal point while the person is reading, because a beginner has to understand the command before typing. The terminal is the focal point of practice, because the product is practice.
 - The trail is a list, because the content is a sequence.
 - Plex Sans and Plex Mono, because UI text and commands need to be related and readable, including offline.
 - 2px radius and no shadow, because this is a tool sitting on a page, not a stack of cards.

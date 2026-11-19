@@ -34,7 +34,7 @@ describe('Terminal', () => {
         onSubmit={onSubmit}
       />,
     );
-    const input = screen.getByLabelText('Comando') as HTMLInputElement;
+    const input = screen.getByLabelText('Digite o comando') as HTMLInputElement;
 
     await user.click(screen.getByRole('button', { name: 'Inserir git' }));
     expect(input.value).toBe('git ');

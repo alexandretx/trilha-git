@@ -1,6 +1,7 @@
 import type { Task } from '../../core/types';
 import type { GitCheck } from '../../engines/git/grade';
 import type { GitInitialState } from '../../engines/git/repo';
+import { level3Lessons } from './lessons/level3';
 
 export type GitTask = Task<GitInitialState, GitCheck>;
 
@@ -30,6 +31,7 @@ const conflict: GitInitialState = {
 export const level3Tasks: readonly GitTask[] = [
   {
     id: 'abrir-branch',
+    lesson: level3Lessons['abrir-branch'],
     conceptId: 'branch',
     title: 'Criar a branch ajuste',
     scenario: 'Crie a branch ajuste a partir do commit atual e permaneça em main. Não faça commit.',
@@ -44,9 +46,21 @@ export const level3Tasks: readonly GitTask[] = [
       commits: [{ message: 'abre', files: { 'cardapio.txt': cafe8 } }],
     },
     checks: [
-      { op: 'branchExists', name: 'ajuste', fail: 'A branch ajuste não existe.' },
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
-      { op: 'commitCount', count: 1, fail: 'Não crie outro commit nesta tarefa.' },
+      {
+        op: 'branchExists',
+        name: 'ajuste',
+        fail: 'A branch ajuste não existe. Uma branch é um nome apontando para um commit. Criar o nome não troca a linha em que você está e não pede commit.',
+      },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
+      {
+        op: 'commitCount',
+        count: 1,
+        fail: 'Já existe um commit a mais. Esta tarefa não grava snapshot. O painel não deve ganhar outra linha.',
+      },
       {
         op: 'branchTipMessage',
         name: 'ajuste',
@@ -58,6 +72,7 @@ export const level3Tasks: readonly GitTask[] = [
   },
   {
     id: 'anotar-branches',
+    lesson: level3Lessons['anotar-branches'],
     conceptId: 'branch',
     title: 'Anotar o nome da outra branch',
     scenario:
@@ -89,12 +104,17 @@ export const level3Tasks: readonly GitTask[] = [
         content: 'promocao\n',
         fail: 'branch.txt precisa ter o nome da outra branch, com uma quebra de linha.',
       },
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
       { op: 'branchExists', name: 'promocao', fail: 'A outra branch foi apagada.' },
     ],
   },
   {
     id: 'apagar-branch-antiga',
+    lesson: level3Lessons['apagar-branch-antiga'],
     conceptId: 'branch',
     title: 'Apagar a branch rascunho',
     scenario:
@@ -115,7 +135,11 @@ export const level3Tasks: readonly GitTask[] = [
     },
     checks: [
       { op: 'branchMissing', name: 'rascunho', fail: 'A branch rascunho ainda existe.' },
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
       { op: 'commitCount', count: 2, fail: 'O histórico de main mudou.' },
       {
         op: 'headMessageIncludes',
@@ -126,6 +150,7 @@ export const level3Tasks: readonly GitTask[] = [
   },
   {
     id: 'entrar-na-branch',
+    lesson: level3Lessons['entrar-na-branch'],
     conceptId: 'switch',
     title: 'Entrar na branch promocao',
     scenario:
@@ -150,7 +175,11 @@ export const level3Tasks: readonly GitTask[] = [
       branches: { main: 'base', promocao: 'pro' },
     },
     checks: [
-      { op: 'branch', name: 'promocao', fail: 'A branch atual não é promocao.' },
+      {
+        op: 'branch',
+        name: 'promocao',
+        fail: 'A branch atual não é promocao. Trocar de branch move o HEAD e copia os arquivos daquele commit para a pasta. O painel passa a nomear promocao no ponto preenchido.',
+      },
       {
         op: 'worktree',
         path: 'aviso.txt',
@@ -174,6 +203,7 @@ export const level3Tasks: readonly GitTask[] = [
   },
   {
     id: 'commit-na-branch',
+    lesson: level3Lessons['commit-na-branch'],
     conceptId: 'switch',
     title: 'Commitar na branch porcao',
     scenario:
@@ -221,6 +251,7 @@ export const level3Tasks: readonly GitTask[] = [
   },
   {
     id: 'voltar-para-main',
+    lesson: level3Lessons['voltar-para-main'],
     conceptId: 'switch',
     title: 'Voltar para main sem a alteração',
     scenario:
@@ -274,6 +305,7 @@ export const level3Tasks: readonly GitTask[] = [
   },
   {
     id: 'avancar-main',
+    lesson: level3Lessons['avancar-main'],
     conceptId: 'merge',
     title: 'Avançar main até promocao',
     scenario:
@@ -298,7 +330,11 @@ export const level3Tasks: readonly GitTask[] = [
       branches: { main: 'a', promocao: 'b' },
     },
     checks: [
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
       { op: 'headParentCount', count: 1, fail: 'main ganhou um commit de merge.' },
       {
         op: 'headMessageIncludes',
@@ -318,11 +354,16 @@ export const level3Tasks: readonly GitTask[] = [
         fail: 'A branch promocao mudou de commit.',
       },
       { op: 'clean', fail: 'A pasta não corresponde ao commit.' },
-      { op: 'merging', value: false, fail: 'O merge ficou aberto.' },
+      {
+        op: 'merging',
+        value: false,
+        fail: 'O merge ficou aberto. Ainda há conflito sem resolver, ou falta o commit que fecha a união. O painel continua avisando o merge.',
+      },
     ],
   },
   {
     id: 'juntar-arquivos',
+    lesson: level3Lessons['juntar-arquivos'],
     conceptId: 'merge',
     title: 'Unir arquivos das duas branches',
     scenario:
@@ -353,8 +394,16 @@ export const level3Tasks: readonly GitTask[] = [
       branches: { main: 'main1', promocao: 'pro' },
     },
     checks: [
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
-      { op: 'headParentCount', count: 2, fail: 'Falta um commit de merge com dois pais.' },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
+      {
+        op: 'headParentCount',
+        count: 2,
+        fail: 'Falta um commit de merge com dois pais. As branches divergiram, então avançar o ponteiro não junta os dois lados. O commit novo aponta para as duas pontas.',
+      },
       {
         op: 'headFile',
         path: 'horario.txt',
@@ -379,11 +428,16 @@ export const level3Tasks: readonly GitTask[] = [
         fail: 'O commit de promocao ficou fora do histórico.',
       },
       { op: 'clean', fail: 'A pasta não corresponde ao merge.' },
-      { op: 'merging', value: false, fail: 'O merge ficou aberto.' },
+      {
+        op: 'merging',
+        value: false,
+        fail: 'O merge ficou aberto. Ainda há conflito sem resolver, ou falta o commit que fecha a união. O painel continua avisando o merge.',
+      },
     ],
   },
   {
     id: 'resolver-conflito',
+    lesson: level3Lessons['resolver-conflito'],
     conceptId: 'merge',
     title: 'Resolver o conflito do cardápio',
     scenario:
@@ -397,7 +451,11 @@ export const level3Tasks: readonly GitTask[] = [
       'As duas branches escreveram preços diferentes na mesma linha, então o merge para e marca o arquivo. git add tira o arquivo da lista de conflitos. O commit tem dois pais e o texto escolhido, sem os marcadores.',
     initialState: conflict,
     checks: [
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
       { op: 'headParentCount', count: 2, fail: 'Falta o commit de merge.' },
       {
         op: 'headFile',
@@ -412,11 +470,16 @@ export const level3Tasks: readonly GitTask[] = [
         fail: 'A pasta não tem o cardápio resolvido.',
       },
       { op: 'clean', fail: 'Ainda há diferença entre a pasta e o commit.' },
-      { op: 'merging', value: false, fail: 'O merge ainda está aberto.' },
+      {
+        op: 'merging',
+        value: false,
+        fail: 'O merge ainda está aberto. Ou os marcadores continuam no arquivo e falta o commit, ou a desistência não devolveu branch, stage e pasta ao commit anterior.',
+      },
     ],
   },
   {
     id: 'abortar-merge',
+    lesson: level3Lessons['abortar-merge'],
     conceptId: 'merge',
     title: 'Interromper o merge do lote',
     scenario:
@@ -457,8 +520,16 @@ export const level3Tasks: readonly GitTask[] = [
         prefix: ['git', 'merge', '--abort'],
         fail: 'Interrompa o merge com git merge --abort.',
       },
-      { op: 'merging', value: false, fail: 'O merge ainda está aberto.' },
-      { op: 'branch', name: 'main', fail: 'A branch atual deixou de ser main.' },
+      {
+        op: 'merging',
+        value: false,
+        fail: 'O merge ainda está aberto. Ou os marcadores continuam no arquivo e falta o commit, ou a desistência não devolveu branch, stage e pasta ao commit anterior.',
+      },
+      {
+        op: 'branch',
+        name: 'main',
+        fail: 'A branch atual deixou de ser main. O próximo commit entra na linha em que você está. O painel mostra o nome dessa linha junto do ponto preenchido.',
+      },
       {
         op: 'headMessageIncludes',
         text: 'estoque atual',

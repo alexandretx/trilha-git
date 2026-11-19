@@ -1,6 +1,7 @@
 import type { Task } from '../../core/types';
 import type { GitCheck } from '../../engines/git/grade';
 import type { GitInitialState } from '../../engines/git/repo';
+import { level2Lessons } from './lessons/level2';
 
 export type GitTask = Task<GitInitialState, GitCheck>;
 
@@ -12,6 +13,7 @@ const cafe0 = 'cafe 0\n';
 export const level2Tasks: readonly GitTask[] = [
   {
     id: 'ver-diff',
+    lesson: level2Lessons['ver-diff'],
     conceptId: 'diff',
     title: 'Ver a alteração na pasta',
     scenario:
@@ -28,7 +30,11 @@ export const level2Tasks: readonly GitTask[] = [
       worktree: { 'cardapio.txt': cafe9 },
     },
     checks: [
-      { op: 'ran', prefix: ['git', 'diff'], fail: 'Rode git diff para ler a alteração.' },
+      {
+        op: 'ran',
+        prefix: ['git', 'diff'],
+        fail: 'Falta uma leitura com git diff. Esse comando não grava nada: ele mostra a linha que saiu e a linha que entrou. O preço novo está na linha com +.',
+      },
       {
         op: 'worktree',
         path: 'preco.txt',
@@ -47,11 +53,16 @@ export const level2Tasks: readonly GitTask[] = [
         content: cafe8,
         fail: 'O stage de cardapio.txt mudou. Ele devia continuar no preço antigo.',
       },
-      { op: 'commitCount', count: 1, fail: 'Não crie outro commit nesta tarefa.' },
+      {
+        op: 'commitCount',
+        count: 1,
+        fail: 'Já existe um commit a mais. Esta tarefa não grava snapshot. O painel não deve ganhar outra linha.',
+      },
     ],
   },
   {
     id: 'ver-diff-stage',
+    lesson: level2Lessons['ver-diff-stage'],
     conceptId: 'diff',
     title: 'Ver o preço que está no stage',
     scenario:
@@ -68,7 +79,11 @@ export const level2Tasks: readonly GitTask[] = [
       index: { 'cardapio.txt': cafe10 },
     },
     checks: [
-      { op: 'ran', prefix: ['git', 'diff'], fail: 'Rode git diff para ler o stage.' },
+      {
+        op: 'ran',
+        prefix: ['git', 'diff'],
+        fail: 'Falta um git diff. Sem --staged, a leitura olha a pasta contra o stage. O preço que a tarefa pede está no stage, comparado ao último commit.',
+      },
       {
         op: 'worktree',
         path: 'preco.txt',
@@ -87,11 +102,16 @@ export const level2Tasks: readonly GitTask[] = [
         content: cafe8,
         fail: 'O texto de cardapio.txt na pasta mudou.',
       },
-      { op: 'commitCount', count: 1, fail: 'Não crie outro commit nesta tarefa.' },
+      {
+        op: 'commitCount',
+        count: 1,
+        fail: 'Já existe um commit a mais. Esta tarefa não grava snapshot. O painel não deve ganhar outra linha.',
+      },
     ],
   },
   {
     id: 'ler-commit-antigo',
+    lesson: level2Lessons['ler-commit-antigo'],
     conceptId: 'show',
     title: 'Ler o preço antigo',
     scenario:
@@ -110,7 +130,11 @@ export const level2Tasks: readonly GitTask[] = [
       ],
     },
     checks: [
-      { op: 'ran', prefix: ['git', 'show'], fail: 'Rode git show para ler o commit anterior.' },
+      {
+        op: 'ran',
+        prefix: ['git', 'show'],
+        fail: 'Falta um git show. O preço antigo está num commit que não é o atual. HEAD~1 nomeia o pai, um passo atrás, sem mover a branch.',
+      },
       {
         op: 'worktree',
         path: 'antes.txt',
@@ -133,6 +157,7 @@ export const level2Tasks: readonly GitTask[] = [
   },
   {
     id: 'descartar-edicao',
+    lesson: level2Lessons['descartar-edicao'],
     conceptId: 'restore',
     title: 'Descartar a edição da pasta',
     scenario:
@@ -161,12 +186,17 @@ export const level2Tasks: readonly GitTask[] = [
         content: cafe8,
         fail: 'O stage de cardapio.txt mudou.',
       },
-      { op: 'commitCount', count: 1, fail: 'Não crie outro commit nesta tarefa.' },
+      {
+        op: 'commitCount',
+        count: 1,
+        fail: 'Já existe um commit a mais. Esta tarefa não grava snapshot. O painel não deve ganhar outra linha.',
+      },
       { op: 'clean', fail: 'Ainda há diferença entre a pasta, o stage e o commit.' },
     ],
   },
   {
     id: 'tirar-do-stage',
+    lesson: level2Lessons['tirar-do-stage'],
     conceptId: 'restore',
     title: 'Tirar o arquivo do stage',
     scenario:
@@ -196,11 +226,16 @@ export const level2Tasks: readonly GitTask[] = [
         content: cafe9,
         fail: 'A edição sumiu da pasta.',
       },
-      { op: 'commitCount', count: 1, fail: 'Não crie outro commit nesta tarefa.' },
+      {
+        op: 'commitCount',
+        count: 1,
+        fail: 'Já existe um commit a mais. Esta tarefa não grava snapshot. O painel não deve ganhar outra linha.',
+      },
     ],
   },
   {
     id: 'refazer-mensagem',
+    lesson: level2Lessons['refazer-mensagem'],
     conceptId: 'reset',
     title: 'Corrigir a mensagem do commit',
     scenario:
@@ -246,6 +281,7 @@ export const level2Tasks: readonly GitTask[] = [
   },
   {
     id: 'devolver-para-a-pasta',
+    lesson: level2Lessons['devolver-para-a-pasta'],
     conceptId: 'reset',
     title: 'Devolver o commit para a pasta',
     scenario:
@@ -297,6 +333,7 @@ export const level2Tasks: readonly GitTask[] = [
   },
   {
     id: 'apagar-commit-local',
+    lesson: level2Lessons['apagar-commit-local'],
     conceptId: 'reset',
     title: 'Apagar um commit local',
     scenario:
@@ -343,6 +380,7 @@ export const level2Tasks: readonly GitTask[] = [
   },
   {
     id: 'desfazer-commit-publicado',
+    lesson: level2Lessons['desfazer-commit-publicado'],
     conceptId: 'revert',
     title: 'Desfazer um commit compartilhado',
     scenario:

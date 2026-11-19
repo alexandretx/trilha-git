@@ -28,9 +28,9 @@ describe('TrailScreen', () => {
       <TrailScreen progress={emptyProgress()} loadError={null} onShowIntro={() => undefined} />,
     );
     expect(screen.getByRole('heading', { name: 'Básico' })).toBeTruthy();
-    expect(screen.getByText('Nenhuma tarefa concluída ainda.')).toBeTruthy();
-    expect(screen.getByRole('progressbar', { name: 'Domínio de init, 0%' })).toBeTruthy();
-    expect(screen.getByRole('progressbar', { name: 'Domínio de commit, 0%' })).toBeTruthy();
+    expect(screen.getByText(/Nenhuma tarefa concluída ainda/)).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Domínio de git init, 0%' })).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Domínio de git commit, 0%' })).toBeTruthy();
     const next = document.querySelector('.task-row.is-next');
     expect(next?.textContent).toContain('Iniciar o repositório');
 
@@ -59,7 +59,7 @@ describe('TrailScreen', () => {
     expect(historico?.querySelector('a')).toBeTruthy();
     expect(historico?.textContent).not.toContain('Fechado.');
     expect(branches?.textContent).toContain('Fechado.');
-    expect(screen.getByRole('progressbar', { name: 'Domínio de init, 100%' })).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Domínio de git init, 100%' })).toBeTruthy();
   });
 
   it('lists a due review above the task index', () => {

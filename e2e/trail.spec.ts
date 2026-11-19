@@ -17,8 +17,10 @@ test('completes a level 1 task and leaves Histórico closed', async ({ page }) =
   await openTrail(page);
   await page.getByRole('link', { name: /Iniciar o repositório/ }).click();
   await expect(page.getByRole('heading', { name: 'Iniciar o repositório' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Entendi, vamos praticar' })).toBeVisible();
   await expectNoPageOverflow(page);
-  await page.getByRole('textbox', { name: 'Comando' }).fill('git init');
+  await page.getByRole('button', { name: 'Entendi, vamos praticar' }).click();
+  await page.getByRole('textbox', { name: 'Digite o comando' }).fill('git init');
   await page.getByRole('button', { name: 'Executar' }).click();
   await expect(page.getByRole('log')).toContainText('Initialized empty Git repository');
   await page.getByRole('button', { name: 'Verificar tarefa' }).click();
@@ -113,7 +115,8 @@ test('ignores a broken progress file and does not run terminal HTML', async ({ p
 
   await page.goto('/#/tarefa/iniciar-repositorio');
   const payload = '<img src=x onerror="alert(1)"><script>alert(1)</script>';
-  await page.getByRole('textbox', { name: 'Comando' }).fill(`echo ${payload}`);
+  await page.getByRole('button', { name: 'Entendi, vamos praticar' }).click();
+  await page.getByRole('textbox', { name: 'Digite o comando' }).fill(`echo ${payload}`);
   await page.getByRole('button', { name: 'Executar' }).click();
   const log = page.getByRole('log');
   await expect(log).toContainText(payload);
@@ -127,6 +130,12 @@ test('checks the task screen with axe', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Iniciar o repositório' })).toBeVisible();
   await expectAccessible(page);
   await page.getByRole('button', { name: 'Usar tema escuro' }).click();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Entendi, vamos praticar' }).click();
+  await expect(page.getByRole('textbox', { name: 'Digite o comando' })).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole('button', { name: 'Rever a lição' }).click();
+  await expect(page.getByRole('heading', { name: 'O que é' })).toBeVisible();
   await expectAccessible(page);
   await expectNoPageOverflow(page);
 });

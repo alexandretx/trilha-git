@@ -22,8 +22,8 @@ export function TrailScreen({ progress, loadError, onShowIntro }: TrailScreenPro
       <OfflineNote />
       <h1 id="nivel-atual">{lead?.title ?? pack.title}</h1>
       <p className="lede">
-        {count} {count === 1 ? 'tarefa' : 'tarefas'}: {lead?.summary} Vale qualquer sequência que
-        deixe o repositório no estado pedido.
+        {lead?.summary} São {count} {count === 1 ? 'tarefa' : 'tarefas'}. Em cada uma você lê a
+        lição e só depois digita. Verificar olha o repositório, não a frase exata.
       </p>
       <button className="btn" type="button" onClick={onShowIntro}>
         Como funciona
@@ -83,9 +83,11 @@ export function TrailScreen({ progress, loadError, onShowIntro }: TrailScreenPro
             <p className="mastery-note">
               {solved === 0
                 ? 'Nenhuma tarefa concluída ainda.'
-                : `${solved} de ${level.tasks.length} tarefas concluídas.`}
+                : `${solved} de ${level.tasks.length} tarefas concluídas.`}{' '}
+              O domínio é a média das tarefas. Com 80%, o próximo nível abre.
             </p>
             <h2>Por comando</h2>
+            <p className="mastery-note">Cada barra é o quanto você já acertou esse comando.</p>
             <ConceptList tasks={level.tasks} outcomes={progress.outcomes} />
             {reviewTasks.length > 0 ? (
               <>
@@ -112,6 +114,10 @@ export function TrailScreen({ progress, loadError, onShowIntro }: TrailScreenPro
   );
 }
 
+function conceptLabel(id: string): string {
+  return `git ${id}`;
+}
+
 function ConceptList({
   tasks,
   outcomes,
@@ -130,11 +136,15 @@ function ConceptList({
         const percent = Math.round(mastery * 100);
         return (
           <li key={id}>
-            <span className="concept-name">{id}</span>
+            <span className="concept-name">{conceptLabel(id)}</span>
             <span className="concept-percent" aria-hidden="true">
               {percent}%
             </span>
-            <progress value={mastery} max={1} aria-label={`Domínio de ${id}, ${percent}%`} />
+            <progress
+              value={mastery}
+              max={1}
+              aria-label={`Domínio de ${conceptLabel(id)}, ${percent}%`}
+            />
           </li>
         );
       })}
@@ -161,7 +171,8 @@ function TaskList({
       {tasks.map((task) => {
         const outcome = progress.outcomes[task.id];
         const status = due.has(task.id) ? 'para revisar' : outcome?.solved ? 'concluída' : 'aberta';
-        const score = outcome && outcome.score > 0 ? ` · ${Math.round(outcome.score * 100)}%` : '';
+        const score =
+          outcome && outcome.score > 0 ? ` · domínio ${Math.round(outcome.score * 100)}%` : '';
         const index = all.findIndex((item) => item.id === task.id) + 1;
         const className = [
           'task-row',
@@ -177,7 +188,7 @@ function TaskList({
               <span className="task-copy">
                 <span className="task-title">{task.title}</span>
                 <span className="task-meta">
-                  {task.conceptId} · {status}
+                  {status}
                   {score}
                 </span>
               </span>

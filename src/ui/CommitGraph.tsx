@@ -16,6 +16,9 @@ export function CommitGraph({ state }: CommitGraphProps) {
   return (
     <section className="commit-graph" aria-labelledby="graph-heading">
       <h2 id="graph-heading">Repositório</h2>
+      <p className="graph-caption">
+        Cada linha é um commit. O ponto preenchido é o HEAD, onde você está.
+      </p>
       <p className="graph-summary">{view.summary}</p>
       {view.conflict ? (
         <p className="graph-conflict" role="status">

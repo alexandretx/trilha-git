@@ -15,9 +15,10 @@ export interface TerminalLine {
 interface TerminalProps {
   lines: readonly TerminalLine[];
   onSubmit: (command: string) => void;
+  autoFocus?: boolean;
 }
 
-export function Terminal({ lines, onSubmit }: TerminalProps) {
+export function Terminal({ lines, onSubmit, autoFocus = false }: TerminalProps) {
   const [value, setValue] = useState('');
   const [past, setPast] = useState<string[]>([]);
   const [cursor, setCursor] = useState(-1);
@@ -31,6 +32,10 @@ export function Terminal({ lines, onSubmit }: TerminalProps) {
     if (!log) return;
     log.scrollTop = log.scrollHeight;
   }, [lines]);
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     const input = inputRef.current;
@@ -161,7 +166,7 @@ export function Terminal({ lines, onSubmit }: TerminalProps) {
         </button>
       </div>
       <form className="command-form" onSubmit={submit}>
-        <label htmlFor="comando">Comando</label>
+        <label htmlFor="comando">Digite o comando</label>
         <input
           ref={inputRef}
           id="comando"
